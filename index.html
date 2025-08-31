@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HealingLensStudio Calm</title>
+
+  <!-- Manifest for PWA support -->
   <link rel="manifest" href="manifest.json">
-  
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="HealingLensStudio Calm">
@@ -41,7 +42,16 @@
       font-family: 'Libre Baskerville', serif;
       font-size: 1rem;
       font-style: italic;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
+    }
+
+    .app-description {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1rem;
+      color: #444;
+      max-width: 500px;
+      margin: 10px auto 20px auto;
+      line-height: 1.6;
     }
 
     .prompt-box {
@@ -115,6 +125,11 @@
 
   <h1>HealingLensStudio Calm</h1>
   <h2>For the Quiet in You 🌿</h2>
+  <p class="app-description">
+    A gentle digital calm corner — with daily prompts, affirmations, and soft practices 
+    for your nervous system.<br>
+    Free. Always here. For the quiet in you.
+  </p>
 
   <label><input type="radio" name="mode" value="prompt" checked> Prompts</label>
   <label><input type="radio" name="mode" value="affirmation"> Affirmations</label>
@@ -160,7 +175,6 @@
         "Touch something near you and notice its texture.",
         "Imagine your breath as waves. Let them wash in and out.",
         "Whisper a kind word to yourself as you would to a friend."
-        // … expand to 25
       ],
       movement: [
         "Stretch your arms overhead like you’re greeting the sun.",
@@ -173,7 +187,6 @@
         "Tap your feet on the floor rhythmically.",
         "Stretch your side body with one arm overhead.",
         "Circle your shoulders slowly like waves."
-        // … expand to 25
       ],
       kindness: [
         "Whisper to yourself: 'I am doing enough.'",
@@ -186,7 +199,6 @@
         "Say: 'I belong here, exactly as I am.'",
         "Affirm: 'Rest is medicine.'",
         "Say: 'Love doesn’t have to be earned.'"
-        // … expand to 25
       ],
       creativity: [
         "Write a one-line poem about the sky.",
@@ -199,7 +211,6 @@
         "Write: 'The story I am telling myself is…'",
         "Sketch something that makes you smile.",
         "Write a haiku about this moment."
-        // … expand to 25
       ]
     };
 
@@ -208,7 +219,6 @@
       movement: ["My body deserves gentle movement.", "I release tension step by step."],
       kindness: ["I am worthy of love exactly as I am.", "Softness is strength."],
       creativity: ["Expression is healing.", "My ideas do not need to be perfect."]
-      // … expand each to ~25
     };
 
     const lastPromptByCategory = {};
@@ -274,5 +284,3 @@
   </script>
 </body>
 </html>
-
-
