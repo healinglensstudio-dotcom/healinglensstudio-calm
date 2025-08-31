@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealingLensStudio Calm App</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Poppins:wght@400;600&display=swap');
+
+    body {
+      background-color: #F8F5F2;
+      color: #3F3F3F;
+      font-family: 'Libre Baskerville', serif;
+      text-align: center;
+      padding: 20px;
+      transition: background 1s ease;
+    }
+    .branding h1 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+    .branding p { font-size: 16px; color: #5A5A5A; margin-top: 0; }
+
+    .prompt-box {
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 600px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    button, select, textarea {
+      margin-top: 12px;
+      font-family: 'Poppins', sans-serif;
+    }
+    button {
+      background: #EED9D0;
+      color: #3F3F3F;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover { background: #D5E0D5; }
+
+    select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .moods button {
+      margin: 5px;
+      padding: 8px 16px;
+    }
+
+    /* Breathe Circle */
+    #breathe-circle {
+      width: 100px; height: 100px;
+      margin: 20px auto;
+      border-radius: 50%;
+      background: #EED9D0;
+      animation: none;
+    }
+    @keyframes breathe {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.5); }
+      100% { transform: scale(1); }
+    }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-family: 'Libre Baskerville', serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="branding">
+    <h1>HealingLensStudio</h1>
+    <p>for the quiet in you 🌿</p>
+  </div>
+
+  <!-- Affirmation / Prompt Toggle -->
+  <div>
+    <label><input type="radio" name="mode" value="prompt" checked> Prompts</label>
+    <label><input type="radio" name="mode" value="affirmation"> Affirmations</label>
+  </div>
+
+  <!-- Category Dropdown -->
+  <div>
+    <label>Choose category:</label>
+    <select id="category">
+      <option value="mindfulness">🌸 Mindfulness</option>
+      <option value="movement">🌿 Movement</option>
+      <option value="kindness">🤍 Kindness</option>
+      <option value="creativity">🎨 Creativity</option>
+    </select>
+  </div>
+
+  <!-- Mood Buttons -->
+  <div class="moods">
+    <p>Or choose by mood:</p>
+    <button onclick="moodPrompt('anxious')">😟 Anxious</button>
+    <button onclick="moodPrompt('tired')">😴 Tired</button>
+    <button onclick="moodPrompt('stuck')">🌑 Stuck</button>
+    <button onclick="moodPrompt('heavy')">💭 Heavy</button>
+  </div>
+
+  <div class="prompt-box">
+    <p id="prompt">Choose a category or mood, then click New Prompt 🌙</p>
+    <button onclick="newPrompt()">New Prompt</button>
+  </div>
+
+  <!-- Breathe With Me -->
+  <h3>Breathe With Me</h3>
+  <div id="breathe-circle"></div>
+  <button onclick="startBreathing()">Start Breathing</button>
+
+  <!-- Daily Ritual -->
+  <h3>Daily Ritual 🌼</h3>
+  <p id="daily-ritual"></p>
+
+  <!-- Reflection Box -->
+  <h3>Your Reflection</h3>
+  <textarea id="reflection" placeholder="Write your thoughts..."></textarea><br>
+  <button onclick="copyReflection()">Copy</button>
+  <button onclick="downloadReflection()">Download</button>
+
+  <script>
+    const prompts = {
+      mindfulness: [
+        "Take three slow breaths and notice the rise and fall of your chest.",
+        "Look around: name 3 things you can see, 2 you can touch, 1 you can hear."
+      ],
+      movement: [
+        "Stretch your arms overhead and take a long inhale.",
+        "Roll your shoulders back gently three times."
+      ],
+      kindness: [
+        "Whisper your name as if to someone you love.",
+        "Write: 'I am allowed to rest without guilt.'"
+      ],
+      creativity: [
+        "Write one line beginning with: 'Today I want to remember…'",
+        "Sketch or doodle for two minutes without judgment."
+      ],
+      anxious: [
+        "Exhale longer than you inhale, three times.",
+        "Find something green and look at it for 20 seconds."
+      ],
+      tired: [
+        "Wrap yourself in a blanket and notice its weight.",
+        "Say softly: 'Rest is repair, not weakness.'"
+      ],
+      stuck: [
+        "Write: 'The smallest next step I can take is…'",
+        "Move your body in any way for 30 seconds."
+      ],
+      heavy: [
+        "Write down one thing you’re carrying. Imagine placing it on the ground.",
+        "Whisper: 'Even without answers, I am allowed to heal.'"
+      ]
+    };
+
+    const affirmations = {
+      mindfulness: ["I can return to my breath anytime.", "I am present in this moment."],
+      movement: ["My body deserves gentle movement.", "I release tension step by step."],
+      kindness: ["I am worthy of love exactly as I am.", "Softness is my strength."],
+      creativity: ["My ideas do not need to be perfect.", "Expression is healing."],
+      anxious: ["I can be safe in this breath.", "I am more than my worry."],
+      tired: ["I deserve deep rest.", "Slowness is still progress."],
+      stuck: ["I trust small steps.", "I do not need to have it all figured out today."],
+      heavy: ["I am allowed to lay burdens down.", "Healing can be lightened by softness."]
+    };
+
+    function newPrompt() {
+      const category = document.getElementById("category").value;
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const set = (mode === "prompt" ? prompts : affirmations)[category];
+      const random = Math.floor(Math.random() * set.length);
+      document.getElementById("prompt").innerText = set[random];
+      document.body.style.backgroundColor = ["#F8F5F2","#EED9D0","#D5E0D5"][Math.floor(Math.random()*3)];
+    }
+
+    function moodPrompt(mood) {
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const set = (mode === "prompt" ? prompts : affirmations)[mood];
+      const random = Math.floor(Math.random() * set.length);
+      document.getElementById("prompt").innerText = set[random];
+    }
+
+    function startBreathing() {
+      const circle = document.getElementById("breathe-circle");
+      circle.style.animation = "breathe 8s infinite";
+      setTimeout(() => circle.style.animation = "none", 32000);
+    }
+
+    // Daily Ritual (rotates once per day)
+    const rituals = [
+      "Unclench your jaw and whisper your name with kindness.",
+      "Write one thing you forgive yourself for.",
+      "Step outside. Feel the air on your skin.",
+      "Rest your palm on your heart and breathe slowly."
+    ];
+    const ritual = rituals[new Date().getDate() % rituals.length];
+    document.getElementById("daily-ritual").innerText = ritual;
+
+    function copyReflection() {
+      const text = document.getElementById("reflection");
+      text.select(); document.execCommand("copy");
+      alert("Copied to clipboard 🌿");
+    }
+
+    function downloadReflection() {
+      const text = document.getElementById("reflection").value;
+      const blob = new Blob([text], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "healinglens_reflection.txt";
+      link.click();
+    }
+  </script>
+</body>
+</html>
