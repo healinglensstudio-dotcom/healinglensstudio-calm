@@ -3,231 +3,246 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HealingLensStudio Calm App</title>
+  <title>HealingLensStudio Calm</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Poppins:wght@400;600&display=swap');
-
     body {
-      background-color: #F8F5F2;
-      color: #3F3F3F;
       font-family: 'Libre Baskerville', serif;
+      background: linear-gradient(to bottom right, #f5f0eb, #e8ede7); /* beige to sage gradient */
+      color: #333;
       text-align: center;
-      padding: 20px;
-      transition: background 1s ease;
+      padding: 40px;
     }
-    .branding h1 {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-      font-size: 28px;
-      margin-bottom: 5px;
-    }
-    .branding p { font-size: 16px; color: #5A5A5A; margin-top: 0; }
 
-    .prompt-box {
+    img {
+      margin-bottom: 20px;
+    }
+
+    #promptArea {
       margin: 20px auto;
       padding: 20px;
-      max-width: 600px;
+      max-width: 500px;
       background: #fff;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
-    button, select, textarea {
-      margin-top: 12px;
-      font-family: 'Poppins', sans-serif;
+    #promptDisplay {
+      font-size: 20px;
+      margin: 10px 0;
+      line-height: 1.6;
     }
+
     button {
-      background: #EED9D0;
+      font-family: 'Poppins', sans-serif;
+      background: #EED9D0; /* blush */
       color: #3F3F3F;
-      padding: 10px 20px;
       border: none;
+      padding: 12px 20px;
+      margin: 10px 5px;
       border-radius: 25px;
       cursor: pointer;
+      font-size: 16px;
       transition: 0.3s;
     }
-    button:hover { background: #D5E0D5; }
 
-    select {
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+    button:hover {
+      background: #D5E0D5; /* sage hover */
     }
 
-    .moods button {
-      margin: 5px;
-      padding: 8px 16px;
-    }
-
-    /* Breathe Circle */
-    #breathe-circle {
-      width: 100px; height: 100px;
-      margin: 20px auto;
-      border-radius: 50%;
-      background: #EED9D0;
-      animation: none;
-    }
-    @keyframes breathe {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.5); }
-      100% { transform: scale(1); }
-    }
-
-    textarea {
-      width: 100%;
-      height: 80px;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-family: 'Libre Baskerville', serif;
+    @media (max-width: 600px) {
+      body {
+        padding: 20px;
+        font-size: 18px;
+      }
+      #promptDisplay {
+        font-size: 18px;
+      }
+      button {
+        font-size: 15px;
+        padding: 10px 16px;
+      }
     }
   </style>
+
+  <!-- html2canvas for Save as Image -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-  <div class="branding">
-    <h1>HealingLensStudio</h1>
-    <p>for the quiet in you 🌿</p>
+
+  <!-- HealingLensStudio Logo -->
+  <div style="text-align:center; margin-bottom:20px;">
+    <img src="HealingLensStudio.png" alt="Healing Lens Studio Logo" width="180">
   </div>
 
-  <!-- Affirmation / Prompt Toggle -->
-  <div>
-    <label><input type="radio" name="mode" value="prompt" checked> Prompts</label>
-    <label><input type="radio" name="mode" value="affirmation"> Affirmations</label>
+  <h1>HealingLensStudio Calm</h1>
+  <p>For the Quiet in You 🌿</p>
+
+  <!-- Prompt Area -->
+  <div id="promptArea">
+    <div id="promptDisplay">Click a category to receive your gentle prompt.</div>
   </div>
 
-  <!-- Category Dropdown -->
-  <div>
-    <label>Choose category:</label>
-    <select id="category">
-      <option value="mindfulness">🌸 Mindfulness</option>
-      <option value="movement">🌿 Movement</option>
-      <option value="kindness">🤍 Kindness</option>
-      <option value="creativity">🎨 Creativity</option>
-    </select>
-  </div>
-
-  <!-- Mood Buttons -->
-  <div class="moods">
-    <p>Or choose by mood:</p>
-    <button onclick="moodPrompt('anxious')">😟 Anxious</button>
-    <button onclick="moodPrompt('tired')">😴 Tired</button>
-    <button onclick="moodPrompt('stuck')">🌑 Stuck</button>
-    <button onclick="moodPrompt('heavy')">💭 Heavy</button>
-  </div>
-
-  <div class="prompt-box">
-    <p id="prompt">Choose a category or mood, then click New Prompt 🌙</p>
-    <button onclick="newPrompt()">New Prompt</button>
-  </div>
-
-  <!-- Breathe With Me -->
-  <h3>Breathe With Me</h3>
-  <div id="breathe-circle"></div>
-  <button onclick="startBreathing()">Start Breathing</button>
-
-  <!-- Daily Ritual -->
-  <h3>Daily Ritual 🌼</h3>
-  <p id="daily-ritual"></p>
-
-  <!-- Reflection Box -->
-  <h3>Your Reflection</h3>
-  <textarea id="reflection" placeholder="Write your thoughts..."></textarea><br>
-  <button onclick="copyReflection()">Copy</button>
-  <button onclick="downloadReflection()">Download</button>
+  <!-- Buttons -->
+  <button onclick="showPrompt('mindfulness')">Mindfulness</button>
+  <button onclick="showPrompt('movement')">Movement</button>
+  <button onclick="showPrompt('kindness')">Kindness</button>
+  <button onclick="showPrompt('creativity')">Creativity</button>
+  <br>
+  <button onclick="copyPrompt()">Copy Prompt</button>
+  <button onclick="savePromptAsImage()">Save as Image</button>
 
   <script>
-    const prompts = {
+    // ~25 prompts per category (≈100 total)
+    const promptCategories = {
       mindfulness: [
-        "Take three slow breaths and notice the rise and fall of your chest.",
-        "Look around: name 3 things you can see, 2 you can touch, 1 you can hear."
+        "Take 3 slow breaths. Let your shoulders drop with each exhale.",
+        "Notice one sound, one texture, and one scent around you.",
+        "Close your eyes for 30 seconds and notice your breath.",
+        "Scan your body gently from head to toe.",
+        "Name 3 things you see, 2 things you touch, 1 thing you hear.",
+        "Spend one minute simply watching your breath.",
+        "Notice your feet on the ground. Feel their weight.",
+        "Sit quietly and notice the space between thoughts.",
+        "Look outside. Notice something moving slowly.",
+        "Unclench your jaw. Drop your shoulders.",
+        "Drink a sip of water mindfully. Notice the temperature.",
+        "Find something green and look at it for 20 seconds.",
+        "Touch something nearby. Really notice the texture.",
+        "Listen for the quietest sound in the room.",
+        "Breathe in for 4, hold for 2, breathe out for 6.",
+        "Notice: what does your body need right now?",
+        "Rest your palm on your heart. Feel the rise and fall.",
+        "Gaze softly at a point in front of you for 10 seconds.",
+        "Name 3 colors around you.",
+        "Smell something nearby with full attention.",
+        "Inhale deeply. Exhale with a sigh.",
+        "Notice one sensation in your body without judgment.",
+        "Whisper: 'I am here now.'",
+        "Take a pause and notice your breath without changing it.",
+        "Sit in silence for one minute. Just notice."
       ],
       movement: [
-        "Stretch your arms overhead and take a long inhale.",
-        "Roll your shoulders back gently three times."
+        "Stretch your arms overhead and roll your shoulders slowly.",
+        "Take a gentle walk — even 2 minutes counts.",
+        "Loosen your jaw. Wiggle your fingers and toes.",
+        "Roll your head gently side to side.",
+        "Stand and shake out your arms for 20 seconds.",
+        "Stretch your neck gently in a circle.",
+        "Stretch your spine: reach up, then fold forward slowly.",
+        "Do 3 gentle shoulder shrugs.",
+        "Wiggle your toes and notice the sensation.",
+        "Cross your arms and give yourself a hug.",
+        "Stand up and roll your ankles.",
+        "Stretch your wrists gently back and forth.",
+        "Raise your eyebrows up and relax them slowly.",
+        "Massage your temples with two fingers.",
+        "Sit tall. Roll your shoulders back and open your chest.",
+        "Stand, inhale, reach up; exhale, lower your arms.",
+        "Lift one knee and hold for 3 breaths.",
+        "Do a gentle forward fold.",
+        "Circle your wrists slowly.",
+        "Stretch your side body: reach one arm overhead.",
+        "Yawn deliberately and stretch wide.",
+        "Tap your feet rhythmically on the floor.",
+        "Stand, shake one leg at a time.",
+        "Interlace your fingers, stretch your palms outward.",
+        "Stretch your jaw: open wide, then relax."
       ],
       kindness: [
-        "Whisper your name as if to someone you love.",
-        "Write: 'I am allowed to rest without guilt.'"
+        "Speak to yourself as if you were your dearest friend.",
+        "Remember: even small steps are still steps forward.",
+        "Offer yourself the grace you so easily give others.",
+        "Whisper your name with kindness.",
+        "Say softly: 'I am allowed to rest without guilt.'",
+        "Write down one kind thing you can do for yourself today.",
+        "Affirm: 'I am enough exactly as I am.'",
+        "Think of one thing you appreciate about yourself.",
+        "Say gently: 'I forgive myself for not knowing then what I know now.'",
+        "Repeat: 'Softness is strength.'",
+        "Affirm: 'I am more than my productivity.'",
+        "Say: 'It is safe to be seen as I am.'",
+        "Repeat: 'I am learning to be gentle with myself.'",
+        "Write: 'Today I give myself permission to…'",
+        "Say: 'I belong here, exactly as I am.'",
+        "Say to yourself: 'I deserve peace, not just survival.'",
+        "Affirm: 'Even when messy, I am healing.'",
+        "Repeat: 'My pace is sacred.'",
+        "Say: 'I am still whole, even as I heal.'",
+        "Repeat: 'Rest is medicine.'",
+        "Whisper: 'I can breathe through this moment.'",
+        "Affirm: 'Every part of me deserves love.'",
+        "Say: 'Gentleness is my way back home.'",
+        "Affirm: 'I trust my timing.'",
+        "Repeat: 'It’s okay to feel. It’s okay to need.'"
       ],
       creativity: [
-        "Write one line beginning with: 'Today I want to remember…'",
-        "Sketch or doodle for two minutes without judgment."
-      ],
-      anxious: [
-        "Exhale longer than you inhale, three times.",
-        "Find something green and look at it for 20 seconds."
-      ],
-      tired: [
-        "Wrap yourself in a blanket and notice its weight.",
-        "Say softly: 'Rest is repair, not weakness.'"
-      ],
-      stuck: [
-        "Write: 'The smallest next step I can take is…'",
-        "Move your body in any way for 30 seconds."
-      ],
-      heavy: [
-        "Write down one thing you’re carrying. Imagine placing it on the ground.",
-        "Whisper: 'Even without answers, I am allowed to heal.'"
+        "Write a 2-line poem about how you feel right now.",
+        "Sketch something around you without judgment.",
+        "Play with words: describe your mood as a color.",
+        "Write: 'Today I want to remember…'",
+        "Imagine a safe place. Describe it in 3 details.",
+        "Doodle for 2 minutes with no outcome in mind.",
+        "Write one sentence to your future self.",
+        "Draw a symbol of how you feel today.",
+        "Write down a metaphor for your current mood.",
+        "Write: 'I feel most like myself when…'",
+        "Draw a spiral slowly and breathe with it.",
+        "Write a letter beginning: 'Dear Me…'",
+        "Imagine your safe space. Sketch it.",
+        "Write: 'The story I am telling myself is…'",
+        "Draw 3 shapes and connect them.",
+        "Write: 'One thing I want to release is…'",
+        "Sketch an object nearby in 1 minute.",
+        "Write: 'If I trusted myself more, I would…'",
+        "Create a word cloud of emotions you feel.",
+        "Write: 'What feels sacred to me right now is…'",
+        "Draw your hand slowly, line by line.",
+        "Write: 'One truth I am learning is…'",
+        "Sketch something that makes you smile.",
+        "Write a haiku about this moment.",
+        "Write: 'I feel at peace when…'"
       ]
     };
 
-    const affirmations = {
-      mindfulness: ["I can return to my breath anytime.", "I am present in this moment."],
-      movement: ["My body deserves gentle movement.", "I release tension step by step."],
-      kindness: ["I am worthy of love exactly as I am.", "Softness is my strength."],
-      creativity: ["My ideas do not need to be perfect.", "Expression is healing."],
-      anxious: ["I can be safe in this breath.", "I am more than my worry."],
-      tired: ["I deserve deep rest.", "Slowness is still progress."],
-      stuck: ["I trust small steps.", "I do not need to have it all figured out today."],
-      heavy: ["I am allowed to lay burdens down.", "Healing can be lightened by softness."]
-    };
+    let lastIndex = -1; // store last prompt index
 
-    function newPrompt() {
-      const category = document.getElementById("category").value;
-      const mode = document.querySelector('input[name="mode"]:checked').value;
-      const set = (mode === "prompt" ? prompts : affirmations)[category];
-      const random = Math.floor(Math.random() * set.length);
-      document.getElementById("prompt").innerText = set[random];
-      document.body.style.backgroundColor = ["#F8F5F2","#EED9D0","#D5E0D5"][Math.floor(Math.random()*3)];
+    // Show prompt without immediate repeats
+    function showPrompt(category) {
+      const prompts = promptCategories[category];
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * prompts.length);
+      } while (randomIndex === lastIndex && prompts.length > 1); 
+      lastIndex = randomIndex;
+
+      const randomPrompt = prompts[randomIndex];
+      document.getElementById("promptDisplay").innerHTML = `
+        <p>${randomPrompt}</p>
+        <small style="display:block; margin-top:10px; color:#666;">
+          🌿 Breathe this in. Try writing one line in your journal.
+        </small>
+      `;
     }
 
-    function moodPrompt(mood) {
-      const mode = document.querySelector('input[name="mode"]:checked').value;
-      const set = (mode === "prompt" ? prompts : affirmations)[mood];
-      const random = Math.floor(Math.random() * set.length);
-      document.getElementById("prompt").innerText = set[random];
+    // Copy prompt to clipboard
+    function copyPrompt() {
+      const text = document.getElementById("promptDisplay").innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("✨ Prompt copied to clipboard!");
+      });
     }
 
-    function startBreathing() {
-      const circle = document.getElementById("breathe-circle");
-      circle.style.animation = "breathe 8s infinite";
-      setTimeout(() => circle.style.animation = "none", 32000);
-    }
-
-    // Daily Ritual (rotates once per day)
-    const rituals = [
-      "Unclench your jaw and whisper your name with kindness.",
-      "Write one thing you forgive yourself for.",
-      "Step outside. Feel the air on your skin.",
-      "Rest your palm on your heart and breathe slowly."
-    ];
-    const ritual = rituals[new Date().getDate() % rituals.length];
-    document.getElementById("daily-ritual").innerText = ritual;
-
-    function copyReflection() {
-      const text = document.getElementById("reflection");
-      text.select(); document.execCommand("copy");
-      alert("Copied to clipboard 🌿");
-    }
-
-    function downloadReflection() {
-      const text = document.getElementById("reflection").value;
-      const blob = new Blob([text], { type: "text/plain" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "healinglens_reflection.txt";
-      link.click();
+    // Save prompt as image
+    function savePromptAsImage() {
+      const promptArea = document.getElementById("promptArea");
+      html2canvas(promptArea, { backgroundColor: null }).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "healinglens_prompt.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
     }
   </script>
+
 </body>
 </html>
