@@ -6,243 +6,258 @@
   <title>HealingLensStudio Calm</title>
   <style>
     body {
+      margin: 0;
       font-family: 'Libre Baskerville', serif;
-      background: linear-gradient(to bottom right, #f5f0eb, #e8ede7); /* beige to sage gradient */
+      background: linear-gradient(135deg, #f5f1ec, #f0ebe6, #e6f0ec, #fdfcfa);
       color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
       text-align: center;
-      padding: 40px;
     }
 
-    img {
+    .logo img {
+      width: 120px;
+      margin: 20px auto;
+      display: block;
+      opacity: 0.9;
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 400;
+      margin-bottom: 30px;
+    }
+
+    .prompt-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 600px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
       margin-bottom: 20px;
     }
 
-    #promptArea {
-      margin: 20px auto;
-      padding: 20px;
-      max-width: 500px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    #promptDisplay {
-      font-size: 20px;
-      margin: 10px 0;
+    .prompt {
+      font-size: 1.2rem;
       line-height: 1.6;
     }
 
+    .category {
+      margin: 20px 0;
+    }
+
     button {
-      font-family: 'Poppins', sans-serif;
-      background: #EED9D0; /* blush */
-      color: #3F3F3F;
+      background: #a8cbb0;
       border: none;
-      padding: 12px 20px;
-      margin: 10px 5px;
-      border-radius: 25px;
+      padding: 12px 18px;
+      margin: 8px;
+      border-radius: 10px;
+      font-size: 1rem;
       cursor: pointer;
-      font-size: 16px;
       transition: 0.3s;
+      font-family: 'Poppins', sans-serif;
     }
 
     button:hover {
-      background: #D5E0D5; /* sage hover */
+      background: #8fb39a;
+      color: #fff;
+    }
+
+    .footer {
+      font-size: 0.9rem;
+      margin-top: 30px;
+      font-style: italic;
     }
 
     @media (max-width: 600px) {
-      body {
+      .prompt-box {
         padding: 20px;
-        font-size: 18px;
       }
-      #promptDisplay {
-        font-size: 18px;
-      }
-      button {
-        font-size: 15px;
-        padding: 10px 16px;
+      .prompt {
+        font-size: 1rem;
       }
     }
   </style>
-
-  <!-- html2canvas for Save as Image -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
+  <div class="logo">
+    <img src="logo.png" alt="HealingLensStudio Logo">
+  </div>
+  <h1>Healing Lens Studio</h1>
+  <h2>For the Quiet in You</h2>
 
-  <!-- HealingLensStudio Logo -->
-  <div style="text-align:center; margin-bottom:20px;">
-    <img src="HealingLensStudio.png" alt="Healing Lens Studio Logo" width="180">
+  <div class="category">
+    <label for="category">Choose your self-care focus:</label><br>
+    <select id="category">
+      <option value="mindfulness">🌿 Mindfulness</option>
+      <option value="movement">✨ Movement</option>
+      <option value="kindness">💛 Kindness</option>
+      <option value="creativity">🎨 Creativity</option>
+    </select>
   </div>
 
-  <h1>HealingLensStudio Calm</h1>
-  <p>For the Quiet in You 🌿</p>
-
-  <!-- Prompt Area -->
-  <div id="promptArea">
-    <div id="promptDisplay">Click a category to receive your gentle prompt.</div>
+  <div class="prompt-box">
+    <p id="prompt" class="prompt">Click below to receive your gentle self-care prompt.</p>
   </div>
 
-  <!-- Buttons -->
-  <button onclick="showPrompt('mindfulness')">Mindfulness</button>
-  <button onclick="showPrompt('movement')">Movement</button>
-  <button onclick="showPrompt('kindness')">Kindness</button>
-  <button onclick="showPrompt('creativity')">Creativity</button>
-  <br>
-  <button onclick="copyPrompt()">Copy Prompt</button>
-  <button onclick="savePromptAsImage()">Save as Image</button>
+  <button onclick="newPrompt()">🌸 New Prompt</button>
+  <button onclick="copyPrompt()">📋 Copy</button>
+  <button onclick="savePrompt()">💾 Save as Image</button>
 
+  <div class="footer">HealingLensStudio | For the Quiet in You</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    // ~25 prompts per category (≈100 total)
-    const promptCategories = {
+    const prompts = {
       mindfulness: [
-        "Take 3 slow breaths. Let your shoulders drop with each exhale.",
-        "Notice one sound, one texture, and one scent around you.",
-        "Close your eyes for 30 seconds and notice your breath.",
-        "Scan your body gently from head to toe.",
-        "Name 3 things you see, 2 things you touch, 1 thing you hear.",
-        "Spend one minute simply watching your breath.",
-        "Notice your feet on the ground. Feel their weight.",
-        "Sit quietly and notice the space between thoughts.",
-        "Look outside. Notice something moving slowly.",
-        "Unclench your jaw. Drop your shoulders.",
-        "Drink a sip of water mindfully. Notice the temperature.",
-        "Find something green and look at it for 20 seconds.",
-        "Touch something nearby. Really notice the texture.",
-        "Listen for the quietest sound in the room.",
-        "Breathe in for 4, hold for 2, breathe out for 6.",
-        "Notice: what does your body need right now?",
-        "Rest your palm on your heart. Feel the rise and fall.",
-        "Gaze softly at a point in front of you for 10 seconds.",
-        "Name 3 colors around you.",
-        "Smell something nearby with full attention.",
-        "Inhale deeply. Exhale with a sigh.",
-        "Notice one sensation in your body without judgment.",
-        "Whisper: 'I am here now.'",
-        "Take a pause and notice your breath without changing it.",
-        "Sit in silence for one minute. Just notice."
+        "Pause. Place one hand on your chest. Feel one full breath enter and leave.",
+        "Notice one sound around you that feels calming. Stay with it for three breaths.",
+        "Today, let silence be a form of medicine. Five minutes. Just being.",
+        "Notice the weight of your body on the chair. Let it anchor you.",
+        "Close your eyes and imagine your favorite place in nature. Linger there.",
+        "Unclench your jaw. Drop your shoulders. Exhale slowly.",
+        "Sip water slowly — feel it as a reset ritual.",
+        "Rest your hand on your heart and whisper: I am here.",
+        "Look out the window. Find something still and breathe with it.",
+        "Count your breaths up to ten, then begin again gently.",
+        "Notice one thing you can see, hear, feel, smell, and taste right now.",
+        "Put down your phone for two minutes. Rest your eyes on something real.",
+        "When a thought arises, let it drift away like a cloud in the sky.",
+        "Imagine a gentle light surrounding your body. Let it soften you.",
+        "Walk barefoot for a few steps. Feel the ground’s quiet support.",
+        "Place your palm on a warm mug and let it remind you: safety is here.",
+        "Listen deeply to a song without multitasking. Let it fill you.",
+        "Name one color around you. Let your gaze stay there, unhurried.",
+        "Breathe in calm. Exhale what you no longer need.",
+        "Whisper a kind word to yourself as you would to a friend.",
+        "Allow your shoulders to drop lower with each breath.",
+        "Let the next yawn or stretch be your body’s medicine.",
+        "Feel your heartbeat — steady, present, alive.",
+        "Imagine your breath as waves. Let them wash gently in and out.",
+        "Say softly: 'I belong here. This moment is enough.'"
       ],
       movement: [
-        "Stretch your arms overhead and roll your shoulders slowly.",
-        "Take a gentle walk — even 2 minutes counts.",
-        "Loosen your jaw. Wiggle your fingers and toes.",
-        "Roll your head gently side to side.",
-        "Stand and shake out your arms for 20 seconds.",
-        "Stretch your neck gently in a circle.",
-        "Stretch your spine: reach up, then fold forward slowly.",
-        "Do 3 gentle shoulder shrugs.",
-        "Wiggle your toes and notice the sensation.",
-        "Cross your arms and give yourself a hug.",
-        "Stand up and roll your ankles.",
-        "Stretch your wrists gently back and forth.",
-        "Raise your eyebrows up and relax them slowly.",
-        "Massage your temples with two fingers.",
-        "Sit tall. Roll your shoulders back and open your chest.",
-        "Stand, inhale, reach up; exhale, lower your arms.",
-        "Lift one knee and hold for 3 breaths.",
-        "Do a gentle forward fold.",
-        "Circle your wrists slowly.",
-        "Stretch your side body: reach one arm overhead.",
-        "Yawn deliberately and stretch wide.",
-        "Tap your feet rhythmically on the floor.",
-        "Stand, shake one leg at a time.",
-        "Interlace your fingers, stretch your palms outward.",
-        "Stretch your jaw: open wide, then relax."
+        "Stretch your arms overhead like you’re greeting the sun.",
+        "Roll your shoulders back three times — notice the release.",
+        "Stand up and sway gently side to side like tall grass in the breeze.",
+        "Rotate your wrists and ankles, thanking them for carrying you.",
+        "Take three slow steps, noticing each part of your foot landing.",
+        "Raise your arms, then let them fall with an exhale. Repeat.",
+        "Place both feet on the ground. Root into their steadiness.",
+        "Gently twist your torso left and right, breathing slowly.",
+        "Shake your hands as if letting go of the day.",
+        "Stretch your spine tall, then fold forward gently.",
+        "Walk in place for one minute. Match each step with breath.",
+        "Touch your toes softly — or just let your arms dangle.",
+        "Bring your knees to your chest, one at a time. Breathe.",
+        "Circle your shoulders backward, then forward, like waves.",
+        "Stand tall. Imagine a string gently lifting your head.",
+        "Walk slowly to get water. Notice every step.",
+        "Rest your palms on your thighs. Inhale. Exhale.",
+        "Pretend you’re painting a circle in the air with your nose.",
+        "Curl into a ball, then stretch long like a cat.",
+        "Press your palms together at your heart. Feel the warmth.",
+        "Sit back, stretch your arms behind you, and open your chest.",
+        "Stand by a window. Reach toward the sky. Pause.",
+        "Let your jaw relax as you roll your neck side to side.",
+        "Gently tap your shoulders and arms, waking them up.",
+        "Imagine your body is a tree swaying in gentle wind."
       ],
       kindness: [
-        "Speak to yourself as if you were your dearest friend.",
-        "Remember: even small steps are still steps forward.",
-        "Offer yourself the grace you so easily give others.",
-        "Whisper your name with kindness.",
-        "Say softly: 'I am allowed to rest without guilt.'",
-        "Write down one kind thing you can do for yourself today.",
-        "Affirm: 'I am enough exactly as I am.'",
-        "Think of one thing you appreciate about yourself.",
-        "Say gently: 'I forgive myself for not knowing then what I know now.'",
-        "Repeat: 'Softness is strength.'",
-        "Affirm: 'I am more than my productivity.'",
-        "Say: 'It is safe to be seen as I am.'",
-        "Repeat: 'I am learning to be gentle with myself.'",
-        "Write: 'Today I give myself permission to…'",
-        "Say: 'I belong here, exactly as I am.'",
-        "Say to yourself: 'I deserve peace, not just survival.'",
-        "Affirm: 'Even when messy, I am healing.'",
-        "Repeat: 'My pace is sacred.'",
-        "Say: 'I am still whole, even as I heal.'",
-        "Repeat: 'Rest is medicine.'",
-        "Whisper: 'I can breathe through this moment.'",
-        "Affirm: 'Every part of me deserves love.'",
-        "Say: 'Gentleness is my way back home.'",
-        "Affirm: 'I trust my timing.'",
-        "Repeat: 'It’s okay to feel. It’s okay to need.'"
+        "Whisper to yourself: 'I am doing enough.'",
+        "Forgive yourself for something small today.",
+        "Send one kind thought to someone you love.",
+        "Send one kind thought to yourself — past, present, or future.",
+        "Hold your face in your hands gently. Rest there.",
+        "Let your inner critic take a day off.",
+        "Say: 'I allow myself to move at my own pace.'",
+        "Remember: your worth is not measured by productivity.",
+        "Write one line of gratitude — for yourself.",
+        "Imagine hugging your younger self. What would you say?",
+        "Whisper: 'I am safe to soften.'",
+        "Say: 'I belong in this moment exactly as I am.'",
+        "Let yourself enjoy something ordinary — slowly.",
+        "Think of one thing you did well today.",
+        "Send a smile to your reflection in the mirror.",
+        "Say: 'I release the need to be perfect.'",
+        "Whisper: 'I forgive myself for needing rest.'",
+        "Place your hand on your heart and say: 'I am enough.'",
+        "Allow yourself to enjoy a simple pleasure, guilt-free.",
+        "Say: 'My body is not my enemy. It is my home.'",
+        "Send compassion toward the part of you that feels tired.",
+        "Say: 'I am worthy of care without earning it.'",
+        "Think of a time you survived something hard. Thank yourself.",
+        "Allow yourself to pause. You don’t need to push right now.",
+        "Whisper: 'Love doesn’t have to be earned.'"
       ],
       creativity: [
-        "Write a 2-line poem about how you feel right now.",
-        "Sketch something around you without judgment.",
-        "Play with words: describe your mood as a color.",
-        "Write: 'Today I want to remember…'",
-        "Imagine a safe place. Describe it in 3 details.",
-        "Doodle for 2 minutes with no outcome in mind.",
-        "Write one sentence to your future self.",
-        "Draw a symbol of how you feel today.",
-        "Write down a metaphor for your current mood.",
-        "Write: 'I feel most like myself when…'",
-        "Draw a spiral slowly and breathe with it.",
-        "Write a letter beginning: 'Dear Me…'",
-        "Imagine your safe space. Sketch it.",
-        "Write: 'The story I am telling myself is…'",
-        "Draw 3 shapes and connect them.",
-        "Write: 'One thing I want to release is…'",
-        "Sketch an object nearby in 1 minute.",
-        "Write: 'If I trusted myself more, I would…'",
-        "Create a word cloud of emotions you feel.",
-        "Write: 'What feels sacred to me right now is…'",
-        "Draw your hand slowly, line by line.",
-        "Write: 'One truth I am learning is…'",
-        "Sketch something that makes you smile.",
-        "Write a haiku about this moment.",
-        "Write: 'I feel at peace when…'"
+        "Draw a circle. Fill it with colors that feel like today.",
+        "Write a one-line poem about the sky you see.",
+        "Hum a tune without planning — let it find you.",
+        "Sketch something near you without worrying how it looks.",
+        "Write one word that feels alive right now.",
+        "Arrange objects on your desk in a new way.",
+        "Imagine your life as a garden. What’s blooming?",
+        "Doodle a spiral. Let it grow without rules.",
+        "Invent a calming phrase. Whisper it softly.",
+        "Choose three colors and let them meet on a page.",
+        "Write a letter you won’t send — let it free you.",
+        "Close your eyes and imagine painting with light.",
+        "Write a single sentence that starts with: 'Today I honor…'",
+        "Trace your hand on paper. Write one kind word in each finger.",
+        "Let yourself scribble freely for one minute.",
+        "Imagine a story about an object in your room.",
+        "Use your non-dominant hand to draw a flower.",
+        "Whisper a short rhyme — playful, imperfect.",
+        "Stack books, pens, or leaves into a little sculpture.",
+        "Invent a title for the chapter of your life today.",
+        "Write a line that starts with: 'The quiet part of me…'",
+        "Draw a wave. Imagine it’s your breath moving in and out.",
+        "Jot down three words you’d like to embody today.",
+        "Create a soft ritual: light, sip, breathe, write.",
+        "Pretend you’re writing a postcard to your future self."
       ]
     };
 
-    let lastIndex = -1; // store last prompt index
+    let lastPrompt = "";
 
-    // Show prompt without immediate repeats
-    function showPrompt(category) {
-      const prompts = promptCategories[category];
-      let randomIndex;
-      do {
-        randomIndex = Math.floor(Math.random() * prompts.length);
-      } while (randomIndex === lastIndex && prompts.length > 1); 
-      lastIndex = randomIndex;
-
-      const randomPrompt = prompts[randomIndex];
-      document.getElementById("promptDisplay").innerHTML = `
-        <p>${randomPrompt}</p>
-        <small style="display:block; margin-top:10px; color:#666;">
-          🌿 Breathe this in. Try writing one line in your journal.
-        </small>
-      `;
+    function newPrompt() {
+      const category = document.getElementById("category").value;
+      const options = prompts[category];
+      let prompt = options[Math.floor(Math.random() * options.length)];
+      while (prompt === lastPrompt) {
+        prompt = options[Math.floor(Math.random() * options.length)];
+      }
+      lastPrompt = prompt;
+      document.getElementById("prompt").innerText = prompt + "\n\nBreathe this in. Try writing one line in your journal.";
     }
 
-    // Copy prompt to clipboard
     function copyPrompt() {
-      const text = document.getElementById("promptDisplay").innerText;
+      const text = document.getElementById("prompt").innerText;
       navigator.clipboard.writeText(text).then(() => {
-        alert("✨ Prompt copied to clipboard!");
+        alert("Prompt copied to clipboard!");
       });
     }
 
-    // Save prompt as image
-    function savePromptAsImage() {
-      const promptArea = document.getElementById("promptArea");
-      html2canvas(promptArea, { backgroundColor: null }).then(canvas => {
+    function savePrompt() {
+      html2canvas(document.querySelector(".prompt-box")).then(canvas => {
         const link = document.createElement("a");
-        link.download = "healinglens_prompt.png";
-        link.href = canvas.toDataURL("image/png");
+        link.download = "healinglensstudio-prompt.png";
+        link.href = canvas.toDataURL();
         link.click();
       });
     }
   </script>
-
 </body>
 </html>
