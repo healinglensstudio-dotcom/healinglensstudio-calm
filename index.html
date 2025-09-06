@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HealingLensStudio Calm</title>
 
   <!-- Manifest for PWA support -->
@@ -61,11 +61,22 @@
       max-width: 500px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
       margin-bottom: 20px;
+      text-align: left;
+      white-space: pre-wrap;
     }
 
     .prompt {
       font-size: 1.1rem;
       line-height: 1.6;
+      margin: 0;
+    }
+
+    .controls {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-bottom: 10px;
     }
 
     button, select {
@@ -92,7 +103,11 @@
 
     .favorites {
       margin-top: 20px;
+      max-width: 500px;
+      text-align: left;
     }
+
+    .favorites ul { padding-left: 16px; }
 
     .breathe-circle {
       width: 100px; height: 100px;
@@ -113,10 +128,25 @@
       .prompt { font-size: 1rem; }
       button, select { font-size: 0.9rem; padding: 10px; }
     }
+
+    /* simple toast */
+    #toast {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 24px;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: none;
+      z-index: 9999;
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
-  <div class="logo">
+  <div class="logo" aria-hidden="true">
     <picture>
       <source srcset="logo.webp" type="image/webp">
       <img src="logo.png" alt="HealingLensStudio Logo">
@@ -131,10 +161,10 @@
     Free. Always here. For the quiet in you.
   </p>
 
-  <label><input type="radio" name="mode" value="prompt" checked> Prompts</label>
-  <label><input type="radio" name="mode" value="affirmation"> Affirmations</label>
+  <div class="controls" role="group" aria-label="Mode and category">
+    <label><input type="radio" name="mode" value="prompt" checked> Prompts</label>
+    <label><input type="radio" name="mode" value="affirmation"> Affirmations</label>
 
-  <div>
     <select id="category" aria-label="Choose category">
       <option value="mindfulness">🌿 Mindfulness</option>
       <option value="movement">✨ Movement</option>
@@ -147,87 +177,69 @@
     <p id="prompt" class="prompt">✨ Loading your calm…</p>
   </div>
 
-  <button onclick="newPrompt()" aria-label="Get a new prompt">🌸 New</button>
-  <button onclick="copyPrompt()" aria-label="Copy prompt">📋 Copy</button>
-  <button onclick="savePrompt()" aria-label="Save prompt as image">💾 Save</button>
-  <button onclick="addFavorite()" aria-label="Add prompt to favorites">⭐ Favorite</button>
-  <button onclick="viewFavorites()" aria-label="View saved favorites">📖 View Favorites</button>
+  <div class="controls" aria-hidden="false">
+    <button id="newBtn">🌸 New</button>
+    <button id="copyBtn">📋 Copy</button>
+    <button id="saveBtn">💾 Save</button>
+    <button id="favBtn">⭐ Favorite</button>
+    <button id="viewFavBtn">📖 View Favorites</button>
+  </div>
 
   <div class="favorites" id="favorites"></div>
 
   <h3>Breathe With Me</h3>
-  <div class="breathe-circle" id="breathe-circle"></div>
-  <button onclick="startBreathing()" aria-label="Start breathing exercise">🫁 Start</button>
+  <div class="breathe-circle" id="breathe-circle" aria-hidden="true"></div>
+  <button id="startBreath">🫁 Start</button>
 
   <div class="footer">HealingLensStudio | For the Quiet in You</div>
 
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- html2canvas for Save-as-image -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
   <script>
-    const prompts = {
-      mindfulness: [
-        "Pause. Place one hand on your chest. Feel one full breath enter and leave.",
-        "Notice one sound around you that feels calming. Stay with it.",
-        "Close your eyes and imagine your favorite place in nature.",
-        "Unclench your jaw. Drop your shoulders. Exhale slowly.",
-        "Sip water slowly — feel it as a reset ritual.",
-        "Look outside. Find something still and breathe with it.",
-        "Count your breaths up to ten, then begin again.",
-        "Touch something near you and notice its texture.",
-        "Imagine your breath as waves. Let them wash in and out.",
-        "Whisper a kind word to yourself as you would to a friend."
-      ],
-      movement: [
-        "Stretch your arms overhead like you’re greeting the sun.",
-        "Roll your shoulders back three times.",
-        "Sway gently side to side like tall grass.",
-        "Rotate your wrists and ankles, thanking them.",
-        "Stand tall. Imagine a string lifting your head.",
-        "Shake your hands as if letting go of the day.",
-        "Stretch your spine tall, then fold forward gently.",
-        "Tap your feet on the floor rhythmically.",
-        "Stretch your side body with one arm overhead.",
-        "Circle your shoulders slowly like waves."
-      ],
-      kindness: [
-        "Whisper to yourself: 'I am doing enough.'",
-        "Forgive yourself for something small today.",
-        "Whisper your name with kindness.",
-        "Say softly: 'I am allowed to rest without guilt.'",
-        "Affirm: 'I am enough exactly as I am.'",
-        "Imagine hugging your younger self.",
-        "Whisper: 'I am safe to soften.'",
-        "Say: 'I belong here, exactly as I am.'",
-        "Affirm: 'Rest is medicine.'",
-        "Say: 'Love doesn’t have to be earned.'"
-      ],
-      creativity: [
-        "Write a one-line poem about the sky.",
-        "Sketch something near you without judgment.",
-        "Write: 'Today I want to remember…'",
-        "Imagine a safe place. Describe it.",
-        "Doodle for 2 minutes with no rules.",
-        "Write one sentence to your future self.",
-        "Draw a symbol of how you feel today.",
-        "Write: 'The story I am telling myself is…'",
-        "Sketch something that makes you smile.",
-        "Write a haiku about this moment."
-      ]
-    };
+    // -- Data will be loaded from prompts.json
+    let prompts = {};
+    let affirmations = {};
 
-    const affirmations = {
-      mindfulness: ["I can return to my breath anytime.", "This moment is enough."],
-      movement: ["My body deserves gentle movement.", "I release tension step by step."],
-      kindness: ["I am worthy of love exactly as I am.", "Softness is strength."],
-      creativity: ["Expression is healing.", "My ideas do not need to be perfect."]
-    };
+    async function loadLibrary() {
+      try {
+        // Use a relative path so it works on GitHub Pages subpath
+        const res = await fetch('./prompts.json', { cache: "no-store" });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const lib = await res.json();
 
+        if (lib && lib.prompts && lib.affirmations) {
+          prompts = lib.prompts;
+          affirmations = lib.affirmations;
+          console.log('Library loaded:', {prompts, affirmations});
+          // show initial prompt
+          newPrompt();
+          showToast('Library loaded');
+          return;
+        }
+      } catch (e) {
+        console.warn('Could not load prompts.json — check path or file', e);
+        showToast('Using built-in library (or none) — check console');
+      }
+    }
+
+    // -- UI state
     const lastPromptByCategory = {};
-    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
 
     function newPrompt() {
       const category = document.getElementById("category").value;
       const mode = document.querySelector('input[name="mode"]:checked').value;
       const set = (mode === "prompt" ? prompts : affirmations)[category];
+
+      // If library failed to load, handle gracefully
+      if (!set || !set.length) {
+        document.getElementById("prompt").innerText = "No items available for this category. Please check prompts.json.";
+        return;
+      }
+
       let randomIndex;
       do {
         randomIndex = Math.floor(Math.random() * set.length);
@@ -237,50 +249,145 @@
       document.getElementById("prompt").innerText = text + (mode === "prompt" ? "\n\n🌿 Breathe this in. Try writing one line in your journal." : "");
     }
 
-    // Show daily prompt on load
-    window.onload = () => { newPrompt(); };
-
-    function copyPrompt() {
+    // Copy with feedback
+    async function copyPrompt() {
       const text = document.getElementById("prompt").innerText;
-      navigator.clipboard.writeText(text).then(() => alert("Prompt copied!"));
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Prompt copied!');
+      } catch (e) {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          showToast('Prompt copied!');
+        } catch (err) {
+          showToast('Copy failed');
+        }
+        ta.remove();
+      }
     }
 
+    // Save as image using html2canvas
     function savePrompt() {
-      html2canvas(document.querySelector(".prompt-box")).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "healinglensstudio-prompt.png";
-        link.href = canvas.toDataURL();
+      const node = document.querySelector('.prompt-box');
+      if (!window.html2canvas) {
+        showToast('Save unavailable');
+        return;
+      }
+      showToast('Preparing image…');
+      html2canvas(node, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'healinglensstudio-prompt.png';
+        link.href = canvas.toDataURL('image/png');
         link.click();
-      });
+        showToast('Saved image');
+      }).catch(()=> showToast('Could not save image'));
     }
 
+    // Favorites
     function addFavorite() {
       const text = document.getElementById("prompt").innerText;
+      if (!text) { showToast('Nothing to save'); return; }
       if (!favorites.includes(text)) {
         favorites.push(text);
         localStorage.setItem("favorites", JSON.stringify(favorites));
-        alert("⭐ Saved to favorites!");
+        showToast('⭐ Saved to favorites!');
+      } else {
+        showToast('Already in favorites');
       }
     }
 
     function viewFavorites() {
-      const list = favorites.length ? favorites.map(f => `<li>${f}</li>`).join("") : "<li>No favorites yet.</li>";
-      document.getElementById("favorites").innerHTML = `<h4>Your Favorites:</h4><ul>${list}</ul>`;
+      const container = document.getElementById('favorites');
+      if (!favorites.length) {
+        container.innerHTML = '<h4>Your Favorites:</h4><ul><li>No favorites yet.</li></ul>';
+        return;
+      }
+      const list = favorites.map((f, idx) => `<li style="margin-bottom:8px;"><div style="white-space:pre-wrap;">${escapeHtml(f)}</div><small><button data-use="${idx}" style="margin-top:6px">Use</button> <button data-remove="${idx}">Remove</button></small></li>`).join('');
+      container.innerHTML = `<h4>Your Favorites:</h4><ul>${list}</ul>`;
+      // attach handlers
+      container.querySelectorAll('[data-remove]').forEach(btn => btn.addEventListener('click', (e) => {
+        const i = Number(btn.dataset.remove);
+        favorites.splice(i,1);
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        viewFavorites();
+        showToast('Removed favorite');
+      }));
+      container.querySelectorAll('[data-use]').forEach(btn => btn.addEventListener('click', (e) => {
+        const i = Number(btn.dataset.use);
+        document.getElementById('prompt').innerText = favorites[i];
+        showToast('Loaded favorite');
+      }));
     }
 
+    function escapeHtml(text) {
+      return text.replace(/[&<>"'`=\/]/g, function (s) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#61;'}[s];
+      });
+    }
+
+    // Breathing
+    let breathAnim = null;
     function startBreathing() {
       const circle = document.getElementById("breathe-circle");
-      circle.style.display = "block";
-      circle.animate([
-        { transform: "scale(1)", background: "#EED9D0" },
-        { transform: "scale(1.5)", background: "#D5E0D5" },
-        { transform: "scale(1)", background: "#EED9D0" }
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        showToast('Reduced motion preference enabled');
+        return;
+      }
+      circle.style.display = 'block';
+      if (breathAnim) breathAnim.cancel();
+      breathAnim = circle.animate([
+        { transform: 'scale(1)', offset: 0 },
+        { transform: 'scale(1.5)', offset: 0.5 },
+        { transform: 'scale(1)', offset: 1 }
       ], {
         duration: 8000,
-        iterations: 4
+        iterations: 4,
+        easing: 'ease-in-out'
       });
-      alert("🫁 Inhale as the circle grows, exhale as it shrinks.");
+      showToast('🫁 Inhale as the circle grows, exhale as it shrinks.');
+      // when done, hide
+      breathAnim.onfinish = () => { circle.style.display = 'none'; breathAnim = null; };
     }
+
+    // toast helper
+    let toastTimer = null;
+    function showToast(msg, ms = 1600) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=> t.style.display = 'none', ms);
+    }
+
+    // Event bindings
+    document.getElementById('newBtn').addEventListener('click', newPrompt);
+    document.getElementById('copyBtn').addEventListener('click', copyPrompt);
+    document.getElementById('saveBtn').addEventListener('click', savePrompt);
+    document.getElementById('favBtn').addEventListener('click', addFavorite);
+    document.getElementById('viewFavBtn').addEventListener('click', viewFavorites);
+    document.getElementById('startBreath').addEventListener('click', startBreathing);
+    document.getElementById('category').addEventListener('change', newPrompt);
+    document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', newPrompt));
+
+    // keyboard shortcuts (n = new, f = favorite, c = copy)
+    document.addEventListener('keydown', (e) => {
+      if (e.target && ['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target.tagName)) return;
+      const k = e.key.toLowerCase();
+      if (k === 'n') newPrompt();
+      if (k === 'f') addFavorite();
+      if (k === 'c') copyPrompt();
+    });
+
+    // load library on start
+    window.onload = () => { loadLibrary(); };
+
+    // expose for console if needed
+    window.healingLens = { loadLibrary, newPrompt, addFavorite, viewFavorites };
   </script>
 </body>
 </html>
