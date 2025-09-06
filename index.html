@@ -43,47 +43,26 @@
 
     button{ background:var(--accent); border:none; border-radius:12px; padding:10px 16px;
       font-family:'Poppins',sans-serif; font-size:1.05rem; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,0.03); }
-    button.secondary{ background:transparent; border:1px solid rgba(0,0,0,0.06); }
+    button.secondary{ background:transparent; border:1px solid rgba(0,0,0,0.06); color:var(--text); }
     button:focus{ outline:3px solid rgba(37,110,85,0.12); }
 
-    /* favorites modal */
     .favorites-modal{ position:fixed; left:0; top:0; right:0; bottom:0; display:none; align-items:center; justify-content:center; z-index:9999; }
     .favorites-backdrop{ position:absolute; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,0.35); backdrop-filter: blur(3px); }
     .favorites-card{ position:relative; background:var(--card); border-radius:14px; padding:18px; width:90%; max-width:620px; max-height:78vh; overflow:auto; box-shadow:0 18px 40px rgba(0,0,0,0.14); }
 
-    /* breathing circle (visible over toast/overlays) */
     .breathe-circle {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: var(--accent);
-      margin: 14px auto;
-      display: none;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.06);
-      z-index: 10005;                 /* high so it's visible during animation */
-      transition: opacity 220ms ease;
-      opacity: 0;
-      transform-origin: center;
+      width: 120px; height: 120px; border-radius: 50%; background: var(--accent);
+      margin: 14px auto; display: none; box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+      z-index: 10005; transition: opacity 220ms ease; opacity: 0; transform-origin:center;
     }
-
-    /* CSS fallback animation (used if Web Animations API not supported) */
-    .breathe-circle.breathing {
-      animation: breatheAnim 8s ease-in-out 4;
-      animation-fill-mode:forwards;
-      opacity: 1;
-    }
-    @keyframes breatheAnim {
-      0% { transform: scale(1); background: var(--accent); }
-      50% { transform: scale(1.6); background: var(--accent-2); }
-      100% { transform: scale(1); background: var(--accent); }
-    }
+    /* fallback CSS animation if needed */
+    .breathe-circle.breathing { animation: breatheAnim 8s ease-in-out 4; animation-fill-mode:forwards; opacity:1; }
+    @keyframes breatheAnim { 0%{transform:scale(1);background:var(--accent)} 50%{transform:scale(1.6);background:var(--accent-2)} 100%{transform:scale(1);background:var(--accent)} }
 
     .footer{ font-size:0.9rem; margin-top:20px; color:var(--muted); font-style:italic; }
 
-    /* toast under the circle (lower z) */
     #toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:22px; background:rgba(0,0,0,0.8); color:#fff; padding:8px 12px; border-radius:8px; display:none; z-index:10003;}
 
-    /* Walkthrough overlay */
     .walk-overlay{ position:fixed; inset:0; background:rgba(12,12,12,0.45); display:none; align-items:center; justify-content:center; z-index:10000; }
     .walk-highlight{ position:absolute; border-radius:12px; box-shadow:0 14px 36px rgba(0,0,0,0.18); pointer-events:none; transition:all .28s ease; }
     .walk-tooltip{ position:fixed; z-index:10002; max-width:86vw; background:var(--card); color:var(--text); padding:12px 14px; border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.18); text-align:left; font-size:1rem; }
@@ -106,10 +85,17 @@
   <div class="controls" role="group" aria-label="Choose mode and category">
     <label><input type="radio" name="mode" value="prompt" checked> Prompts</label>
     <label><input type="radio" name="mode" value="affirmation"> Affirmations</label>
-    <select id="category" aria-label="Choose category"><option value="mindfulness">🌿 Mindfulness</option><option value="movement">✨ Movement</option><option value="kindness">💛 Kindness</option><option value="creativity">🎨 Creativity</option></select>
+    <select id="category" aria-label="Choose category">
+      <option value="mindfulness">🌿 Mindfulness</option>
+      <option value="movement">✨ Movement</option>
+      <option value="kindness">💛 Kindness</option>
+      <option value="creativity">🎨 Creativity</option>
+    </select>
   </div>
 
-  <div class="prompt-box" id="promptBox" aria-live="polite" aria-atomic="true"><p id="prompt" class="prompt">✨ Loading your calm…</p></div>
+  <div class="prompt-box" id="promptBox" aria-live="polite" aria-atomic="true">
+    <p id="prompt" class="prompt">✨ Loading your calm…</p>
+  </div>
 
   <div class="controls">
     <button id="newBtn">🌸 New</button>
@@ -135,7 +121,6 @@
 
   <h3>Breathe With Me</h3>
   <div class="breathe-circle" id="breatheCircle" aria-hidden="true"></div>
-
   <div class="controls">
     <button id="startBreath">▶ Start</button>
   </div>
@@ -143,7 +128,6 @@
   <div class="footer">HealingLensStudio | For the Quiet in You</div>
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <!-- Walkthrough overlay -->
   <div class="walk-overlay" id="walkOverlay" aria-hidden="true">
     <div class="walk-highlight" id="walkHighlight" aria-hidden="true"></div>
     <div class="walk-tooltip" id="walkTooltip" aria-hidden="true">
@@ -157,75 +141,213 @@
   </div>
 
   <script>
-    // state
-    let prompts = {}, affirmations = {}, favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    const lastPromptByCategory = {}; let _breathAnim = null;
+  /******************************************************************
+   * Robust single-file app
+   * - Loads ./prompts.json if present, else uses built-in fallback
+   * - Safe event bindings and error handling
+   * - Breathing animation robust across browsers
+   ******************************************************************/
 
-    // load prompts.json
-    async function loadLibrary(){
-      try{
-        const res = await fetch('./prompts.json', { cache:'no-store' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const lib = await res.json();
-        prompts = lib.prompts || {}; affirmations = lib.affirmations || {};
-        newPrompt();
-        showToast('Library loaded');
-      }catch(e){ console.warn('Load error', e); showToast('Library failed to load'); }
+  // --- Built-in fallback library (used only if prompts.json fails)
+  const FALLBACK = {
+    prompts: {
+      mindfulness: [
+        "Pause. Place one hand on your chest. Feel one full breath enter and leave.",
+        "Notice one sound around you that feels calming. Stay with it for a moment.",
+        "Close your eyes and imagine your favorite place in nature.",
+        "Unclench your jaw. Drop your shoulders. Exhale slowly.",
+        "Sip water slowly — feel it as a reset ritual.",
+        "Look outside. Find something still and breathe with it.",
+        "Count your breaths up to five, then begin again.",
+        "Touch something near you and notice its texture.",
+        "Imagine your breath as waves. Let them wash in and out.",
+        "Whisper a kind word to yourself as you would to a friend."
+      ],
+      movement: [
+        "Stretch your arms overhead like you’re greeting the sun.",
+        "Roll your shoulders back three times.",
+        "Sway gently side to side like tall grass.",
+        "Rotate your wrists and ankles, thanking them.",
+        "Stand tall. Imagine a string lifting your head.",
+        "Shake your hands as if letting go of the day.",
+        "Stretch your spine tall, then fold forward gently.",
+        "Tap your feet on the floor rhythmically.",
+        "Stretch your side body with one arm overhead.",
+        "Circle your shoulders slowly like waves."
+      ],
+      kindness: [
+        "Whisper to yourself: 'I am doing enough.'",
+        "Forgive yourself for something small today.",
+        "Whisper your name with kindness.",
+        "Say softly: 'I am allowed to rest without guilt.'",
+        "Affirm: 'I am enough exactly as I am.'",
+        "Imagine hugging your younger self.",
+        "Whisper: 'I am safe to soften.'",
+        "Say: 'I belong here, exactly as I am.'",
+        "Affirm: 'Rest is medicine.'",
+        "Say: 'Love doesn’t have to be earned.'"
+      ],
+      creativity: [
+        "Write a one-line poem about the sky.",
+        "Sketch something near you without judgment.",
+        "Write: 'Today I want to remember…'",
+        "Imagine a safe place. Describe it.",
+        "Doodle for 2 minutes with no rules.",
+        "Write one sentence to your future self.",
+        "Draw a symbol of how you feel today.",
+        "Write: 'The story I am telling myself is…'",
+        "Sketch something that makes you smile.",
+        "Write a haiku about this moment."
+      ]
+    },
+    affirmations: {
+      mindfulness: [
+        "I can return to my breath anytime.",
+        "This moment is enough.",
+        "I am present with what is.",
+        "I allow calm to return to my body."
+      ],
+      movement: [
+        "My body deserves gentle movement.",
+        "I release tension step by step.",
+        "I honor what my body needs."
+      ],
+      kindness: [
+        "I am worthy of love exactly as I am.",
+        "Softness is strength.",
+        "I speak kindly to myself."
+      ],
+      creativity: [
+        "Expression is healing.",
+        "My ideas do not need to be perfect.",
+        "I make space for curiosity."
+      ]
     }
+  };
 
-    // prompt helpers
-    async function setPromptText(text){
+  // --- app state
+  let prompts = {}, affirmations = {};
+  let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+  const lastPromptByCategory = {};
+  let _animRef = null;
+
+  // --- safe helper to show a toast/status
+  let toastTimer = null;
+  function showToast(msg, ms=1400){
+    try {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=> t.style.display = 'none', ms);
+    } catch (e) { console.log('toast error', e); }
+  }
+
+  // --- load remote prompts.json (fallback to FALLBACK if fails)
+  async function loadLibrary(){
+    try {
+      const res = await fetch('./prompts.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const lib = await res.json();
+      if (lib && (lib.prompts || lib.affirmations)) {
+        prompts = lib.prompts || {};
+        affirmations = lib.affirmations || {};
+        console.log('prompts.json loaded');
+      } else {
+        console.warn('prompts.json missing expected keys, using fallback');
+        prompts = FALLBACK.prompts;
+        affirmations = FALLBACK.affirmations;
+      }
+    } catch (err) {
+      console.warn('Could not load prompts.json, using fallback library. Error:', err);
+      prompts = FALLBACK.prompts;
+      affirmations = FALLBACK.affirmations;
+    } finally {
+      // ensure basic structure exists for categories used by UI
+      prompts = prompts || FALLBACK.prompts;
+      affirmations = affirmations || FALLBACK.affirmations;
+      // show one prompt immediately
+      try { newPrompt(); } catch (e) { console.error('newPrompt error', e); }
+    }
+  }
+
+  // --- prompt UI helpers
+  async function setPromptText(text){
+    try {
       const box = document.getElementById('promptBox');
       box.classList.add('fade-out');
       await new Promise(r=>setTimeout(r,260));
       document.getElementById('prompt').innerText = text;
       await new Promise(r=>setTimeout(r,40));
       box.classList.remove('fade-out');
-    }
-    function newPrompt(){
-      const cat = document.getElementById('category').value;
-      const mode = document.querySelector('input[name="mode"]:checked').value;
-      const set = (mode==='prompt' ? prompts : affirmations)[cat] || [];
-      if (!set.length){ setPromptText('No items available for this category.'); return; }
-      let idx; do { idx = Math.floor(Math.random()*set.length); } while (idx===lastPromptByCategory[cat] && set.length>1);
+    } catch (e) { console.error('setPromptText error', e); }
+  }
+
+  function newPrompt(){
+    try {
+      const cat = (document.getElementById('category')||{}).value || 'mindfulness';
+      const modeEl = document.querySelector('input[name="mode"]:checked');
+      const mode = (modeEl && modeEl.value) || 'prompt';
+      const set = (mode === 'prompt' ? prompts : affirmations)[cat] || [];
+      if (!set.length) {
+        setPromptText('No items available for this category.');
+        return;
+      }
+      let idx;
+      do { idx = Math.floor(Math.random() * set.length); } while (idx === lastPromptByCategory[cat] && set.length > 1);
       lastPromptByCategory[cat] = idx;
-      const text = set[idx] + (mode==='prompt' ? "\n\n🌿 Breathe this in. Try writing one line in your journal." : "");
+      const text = set[idx] + (mode === 'prompt' ? "\n\n🌿 Breathe this in. Try writing one line in your journal." : "");
       setPromptText(text);
-    }
+    } catch (e) { console.error('newPrompt error', e); setPromptText('Sorry — something went wrong.'); }
+  }
 
-    // copy/share
-    async function copyPrompt(){ try { await navigator.clipboard.writeText(document.getElementById('prompt').innerText); showToast('Copied'); } catch { showToast('Copy failed'); } }
-    async function sharePrompt(){ const text = document.getElementById('prompt').innerText.trim(); if (!text) return showToast('Nothing to share'); if (navigator.share) { try { await navigator.share({ title: 'HealingLensStudio Calm', text }); showToast('Shared'); return; } catch (e) {} } try { await navigator.clipboard.writeText(text); showToast('Sharing not supported — copied'); } catch { showToast('Could not share'); } }
+  // --- copy & share
+  async function copyPrompt(){
+    try { await navigator.clipboard.writeText(document.getElementById('prompt').innerText); showToast('Copied'); }
+    catch (e) { console.warn('copy failed', e); showToast('Copy failed'); }
+  }
+  async function sharePrompt(){
+    try {
+      const text = document.getElementById('prompt').innerText.trim();
+      if (!text) return showToast('Nothing to share');
+      if (navigator.share) {
+        await navigator.share({ title: 'HealingLensStudio Calm', text });
+        showToast('Shared');
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      showToast('Sharing not supported — copied');
+    } catch (e) { console.warn('share failed', e); showToast('Could not share'); }
+  }
 
-    // favorites modal
-    function renderFavorites(){
+  // --- favorites modal
+  function escapeHtml(s){ return String(s).replace(/[&<>"'`=\/]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#96;','=':'&#61;'}[c])); }
+  function renderFavorites(){
+    try {
       const el = document.getElementById('favList');
       if (!favorites.length) { el.innerHTML = '<p>No favorites yet.</p>'; return; }
       el.innerHTML = favorites.map((f,i)=>`<div style="margin-bottom:12px;white-space:pre-wrap">${escapeHtml(f)}<div style="margin-top:6px"><button data-use="${i}">Use</button> <button data-remove="${i}" class="secondary">Remove</button></div></div>`).join('');
-      el.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click', ()=>{ const i = +b.dataset.remove; favorites.splice(i,1); localStorage.setItem('favorites', JSON.stringify(favorites)); renderFavorites(); showToast('Removed'); }));
-      el.querySelectorAll('[data-use]').forEach(b=>b.addEventListener('click', ()=>{ const i = +b.dataset.use; setPromptText(favorites[i]); closeFavorites(); showToast('Loaded favorite'); }));
-    }
-    function openFavorites(){ renderFavorites(); document.getElementById('favoritesModal').style.display='flex'; document.getElementById('favoritesModal').setAttribute('aria-hidden','false'); }
-    function closeFavorites(){ document.getElementById('favoritesModal').style.display='none'; document.getElementById('favoritesModal').setAttribute('aria-hidden','true'); }
-    function addFavorite(){ const t = document.getElementById('prompt').innerText; if (!t) return showToast('Nothing to save'); if (!favorites.includes(t)) { favorites.push(t); localStorage.setItem('favorites', JSON.stringify(favorites)); showToast('Saved to favorites'); } else showToast('Already saved'); }
-    function escapeHtml(text){ return text.replace(/[&<>"'`=\/]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#96;','=':'&#61;'}[s])); }
+      el.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click', (ev)=>{ const i=+b.dataset.remove; favorites.splice(i,1); localStorage.setItem('favorites', JSON.stringify(favorites)); renderFavorites(); showToast('Removed'); }));
+      el.querySelectorAll('[data-use]').forEach(b=>b.addEventListener('click', ()=>{ const i=+b.dataset.use; setPromptText(favorites[i]); closeFavorites(); showToast('Loaded favorite'); }));
+    } catch (e) { console.error('renderFavorites error', e); }
+  }
+  function openFavorites(){ renderFavorites(); document.getElementById('favoritesModal').style.display = 'flex'; document.getElementById('favoritesModal').setAttribute('aria-hidden','false'); }
+  function closeFavorites(){ document.getElementById('favoritesModal').style.display = 'none'; document.getElementById('favoritesModal').setAttribute('aria-hidden','true'); }
+  function addFavorite(){ const t = document.getElementById('prompt').innerText; if (!t) return showToast('Nothing to save'); if (!favorites.includes(t)){ favorites.push(t); localStorage.setItem('favorites', JSON.stringify(favorites)); showToast('Saved to favorites'); } else showToast('Already saved'); }
 
-    // toast
-    let toastTimer = null;
-    function showToast(msg, ms=1400){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toastTimer); toastTimer = setTimeout(()=> t.style.display = 'none', ms); }
-
-    // breathing — robust: uses Web Animations API or CSS fallback
-    function startBreathing(){
+  // --- breathing animation: robust (Web Animations API preferred, else CSS fallback)
+  function startBreathing(){
+    try {
       const circle = document.getElementById('breatheCircle');
       if (!circle) return;
-      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){ showToast('Reduced motion enabled'); return; }
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { showToast('Reduced motion'); return; }
 
-      // show circle and scroll it into view
+      // show and bring into view
       circle.style.display = 'block';
       circle.style.opacity = '1';
-      setTimeout(()=>{ try { circle.scrollIntoView({ behavior:'smooth', block:'center', inline:'center' }); } catch(e){} }, 40);
+      setTimeout(()=>{ try { circle.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(e){} }, 40);
 
-      // clear previous if any
+      // cancel previous
       if (window._hl_breathAnim) { try { window._hl_breathAnim.cancel(); } catch(e){} window._hl_breathAnim = null; }
       circle.classList.remove('breathing');
 
@@ -236,51 +358,46 @@
       ];
       const opts = { duration: 8000, iterations: 4, easing: 'ease-in-out', fill: 'forwards' };
 
-      // prefer Web Animations API
       if (Element.prototype.animate) {
         try {
           window._hl_breathAnim = circle.animate(keyframes, opts);
-          // also add breathing class as visible fallback (keeps styles consistent)
           circle.classList.add('breathing');
           showToast('🫁 Follow the circle to breathe');
-          window._hl_breathAnim.onfinish = () => {
+          window._hl_breathAnim.onfinish = ()=> {
             circle.classList.remove('breathing');
             circle.style.opacity = '0';
-            setTimeout(()=>{ circle.style.display = 'none'; }, 220);
+            setTimeout(()=> { circle.style.display = 'none'; }, 220);
             window._hl_breathAnim = null;
             showToast('Breathing complete');
           };
           return;
         } catch (e) {
-          // fallback to CSS below
-          console.warn('animate failed, falling back', e);
+          console.warn('animate error, falling back to CSS', e);
         }
       }
 
-      // CSS fallback: add class then remove after total duration
+      // CSS fallback
       circle.classList.add('breathing');
       showToast('🫁 Follow the circle to breathe');
       const total = opts.duration * opts.iterations;
       setTimeout(()=> {
         circle.classList.remove('breathing');
         circle.style.opacity = '0';
-        setTimeout(()=>{ circle.style.display = 'none'; }, 220);
+        setTimeout(()=> { circle.style.display = 'none'; }, 220);
         showToast('Breathing complete');
       }, total + 50);
-    }
 
-    // walkthrough overlay
-    const walkthroughSteps = [
-      { sel:'#newBtn', text:'Tap 🌸 New to get a calming prompt.' },
-      { sel:'#shareBtn', text:'Tap 📤 Share to send your prompt.' },
-      { sel:'#startBreath', text:'Tap ▶ Start to follow the breathing circle.' }
-    ];
-    function startWalkthroughIfNeeded(){
-      const key = 'hl_walk_v1';
-      if (localStorage.getItem(key)) return;
-      startWalkthrough(0);
-    }
-    function startWalkthrough(index){
+    } catch (e) { console.error('startBreathing error', e); showToast('Breathing failed'); }
+  }
+
+  // --- walkthrough overlay with auto-scroll
+  const walkthroughSteps = [
+    { sel:'#newBtn', text:'Tap 🌸 New to get a calming prompt.' },
+    { sel:'#shareBtn', text:'Tap 📤 Share to send your prompt.' },
+    { sel:'#startBreath', text:'Tap ▶ Start to follow the breathing circle.' }
+  ];
+  function startWalkthrough(index){
+    try {
       const overlay = document.getElementById('walkOverlay');
       const hl = document.getElementById('walkHighlight');
       const tip = document.getElementById('walkTooltip');
@@ -292,7 +409,7 @@
       overlay.setAttribute('aria-hidden','false');
 
       const target = document.querySelector(step.sel);
-      if (!target){
+      if (!target) {
         hl.style.width = '0px'; hl.style.height = '0px';
         tip.style.left = '50%'; tip.style.top = '50%';
         document.getElementById('walkText').innerText = step.text;
@@ -305,7 +422,6 @@
       }
 
       target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-
       const WAIT_MS = 380;
       setTimeout(() => {
         const rect = target.getBoundingClientRect();
@@ -328,26 +444,45 @@
         document.getElementById('walkPrev').onclick = ()=> startWalkthrough(index-1);
         document.getElementById('walkClose').onclick = ()=> { overlay.style.display='none'; overlay.setAttribute('aria-hidden','true'); document.body.style.overflow=''; localStorage.setItem('hl_walk_v1','1'); };
       }, WAIT_MS);
-    }
+    } catch (e) { console.error('walkthrough error', e); }
+  }
+  function startWalkthroughIfNeeded(){ if (!localStorage.getItem('hl_walk_v1')) startWalkthrough(0); }
 
-    // bindings
-    document.getElementById('newBtn').addEventListener('click', newPrompt);
-    document.getElementById('copyBtn').addEventListener('click', copyPrompt);
-    document.getElementById('shareBtn').addEventListener('click', sharePrompt);
-    document.getElementById('favBtn').addEventListener('click', addFavorite);
-    document.getElementById('openFavBtn').addEventListener('click', openFavorites);
-    document.getElementById('closeFav').addEventListener('click', closeFavorites);
-    document.getElementById('closeFav2').addEventListener('click', closeFavorites);
-    document.getElementById('favoritesBackdrop').addEventListener('click', closeFavorites);
-    document.getElementById('startBreath').addEventListener('click', startBreathing);
-    document.getElementById('category').addEventListener('change', newPrompt);
-    document.querySelectorAll('input[name="mode"]').forEach(r=> r.addEventListener('change', newPrompt));
+  // --- event bindings (defensive)
+  window.addEventListener('load', ()=>{
+    try {
+      // wire UI
+      document.getElementById('newBtn').addEventListener('click', newPrompt);
+      document.getElementById('copyBtn').addEventListener('click', copyPrompt);
+      document.getElementById('shareBtn').addEventListener('click', sharePrompt);
+      document.getElementById('favBtn').addEventListener('click', addFavorite);
+      document.getElementById('openFavBtn').addEventListener('click', openFavorites);
+      document.getElementById('closeFav').addEventListener('click', closeFavorites);
+      document.getElementById('closeFav2').addEventListener('click', closeFavorites);
+      document.getElementById('favoritesBackdrop').addEventListener('click', closeFavorites);
+      document.getElementById('startBreath').addEventListener('click', startBreathing);
+      document.getElementById('category').addEventListener('change', newPrompt);
+      document.querySelectorAll('input[name="mode"]').forEach(r=> r.addEventListener('change', newPrompt));
 
-    // init
-    window.addEventListener('load', ()=>{ showOnboardIfNeeded(); loadLibrary(); startWalkthroughIfNeeded(); });
+      // start
+      loadLibrary();
+      showOnboardIfNeeded();
+      startWalkthroughIfNeeded();
+    } catch (e) { console.error('init error', e); }
+  });
 
-    // expose for dev
-    window.healingLens = { newPrompt, addFavorite, openFavorites, loadLibrary, startBreathing };
+  // --- onboarding hint (one-time)
+  function showOnboardIfNeeded(){
+    try {
+      const seen = localStorage.getItem('hl_onboard_v1');
+      const el = document.getElementById('onboardHint');
+      if (!seen){ el.innerText = "Pick a category and tap 🌸 New to begin. Switch to Affirmations for gentle reminders."; el.style.display='block'; setTimeout(()=>{ el.style.display='none'; localStorage.setItem('hl_onboard_v1','1'); },9000); }
+    } catch (e) { /* ignore */ }
+  }
+
+  // expose for debugging
+  window.healingLens = { newPrompt, addFavorite, openFavorites, loadLibrary, startBreathing: startBreathing };
+
   </script>
 </body>
 </html>
