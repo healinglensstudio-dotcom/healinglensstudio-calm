@@ -46,6 +46,7 @@
     button.secondary{ background:transparent; border:1px solid rgba(0,0,0,0.06); }
     button:focus{ outline:3px solid rgba(37,110,85,0.12); }
 
+    /* favorites modal */
     .favorites-modal{ position:fixed; left:0; top:0; right:0; bottom:0; display:none; align-items:center; justify-content:center; z-index:9999; }
     .favorites-backdrop{ position:absolute; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,0.35); backdrop-filter: blur(3px); }
     .favorites-card{ position:relative; background:var(--card); border-radius:14px; padding:18px; width:90%; max-width:620px; max-height:78vh; overflow:auto; box-shadow:0 18px 40px rgba(0,0,0,0.14); }
@@ -55,18 +56,19 @@
 
     #toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:22px; background:rgba(0,0,0,0.8); color:#fff; padding:8px 12px; border-radius:8px; display:none; z-index:10001;}
 
-    /* Walkthrough overlay */
+    /* Walkthrough overlay & highlight */
     .walk-overlay{ position:fixed; inset:0; background:rgba(12,12,12,0.45); display:none; align-items:center; justify-content:center; z-index:10000; }
-    .walk-highlight{ position:absolute; border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,0.18); pointer-events:none; transition:all .28s ease; }
+    .walk-highlight{ position:absolute; border-radius:12px; box-shadow:0 14px 36px rgba(0,0,0,0.18); pointer-events:none; transition:all .28s ease; }
     .walk-tooltip{ position:fixed; z-index:10002; max-width:86vw; background:var(--card); color:var(--text); padding:12px 14px; border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.18); text-align:left; font-size:1rem; }
+
     .walk-controls{ margin-top:10px; display:flex; gap:10px; justify-content:flex-end; }
 
-    /* mobile sticky breath controls */
-    .breath-sticky{ display:none; }
+    .walk-highlight{ outline:10px solid rgba(255,255,255,0.0); transform-origin:center; }
+    .walk-tooltip{ max-width:92vw; left:50% !important; transform:translateX(-50%); }
+
     @media (max-width:520px){
       button, select{ min-width:44vw; }
-      .breath-sticky{ position:fixed; left:10px; right:10px; bottom:12px; display:flex; gap:8px; padding:10px; background:rgba(255,255,255,0.95); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.08); justify-content:center; z-index:9998; }
-      .prompt-box{ padding-bottom:140px; }
+      .prompt-box{ padding-bottom:40px; }
       .walk-tooltip{ font-size:0.96rem; }
     }
   </style>
@@ -111,16 +113,9 @@
   <h3>Breathe With Me</h3>
   <div class="breathe-circle" id="breatheCircle" aria-hidden="true"></div>
 
-  <div class="controls" id="breathControlsTop">
+  <!-- simple Start button only (restored to earlier simpler behaviour) -->
+  <div class="controls">
     <button id="startBreath">▶ Start</button>
-    <button id="stopBreath" class="secondary">■ Stop</button>
-    <select id="breathDur" aria-label="Breathing duration"><option value="60000">1 min</option><option value="180000" selected>3 min</option><option value="300000">5 min</option></select>
-  </div>
-
-  <div id="breathSticky" class="breath-sticky" style="display:none;">
-    <button id="startBreathSticky">▶</button>
-    <button id="stopBreathSticky" class="secondary">■</button>
-    <select id="breathDurSticky" aria-label="Breathing duration small" style="min-width:110px;"><option value="60000">1m</option><option value="180000" selected>3m</option><option value="300000">5m</option></select>
   </div>
 
   <div class="footer">HealingLensStudio | For the Quiet in You</div>
@@ -144,7 +139,7 @@
     let prompts = {}, affirmations = {}, favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     const lastPromptByCategory = {}; let breathAnim = null;
 
-    // load library
+    // load prompts.json
     async function loadLibrary(){
       try {
         const res = await fetch('./prompts.json', {cache:'no-store'});
@@ -152,17 +147,17 @@
         const lib = await res.json();
         prompts = lib.prompts || {}; affirmations = lib.affirmations || {};
         newPrompt(); showToast('Library loaded');
-      } catch(e){ console.warn('Load error',e); showToast('Library failed to load'); }
+      } catch(e){ console.warn('Load error', e); showToast('Library failed to load'); }
     }
 
-    // onboarding hint
+    // onboarding hint (once)
     function showOnboardIfNeeded(){
       const seen = localStorage.getItem('hl_onboard_v1');
       const el = document.getElementById('onboardHint');
       if (!seen){ el.innerText = "Pick a category and tap 🌸 New to begin. Switch to Affirmations for gentle reminders."; el.style.display='block'; setTimeout(()=>{ el.style.display='none'; localStorage.setItem('hl_onboard_v1','1'); },9000); }
     }
 
-    // prompt display with fade
+    // fade prompt helper
     async function setPromptText(text){
       const box = document.getElementById('promptBox');
       box.classList.add('fade-out');
@@ -183,7 +178,7 @@
       setPromptText(text);
     }
 
-    // copy / share
+    // copy/share
     async function copyPrompt(){ const t=document.getElementById('prompt').innerText; try{ await navigator.clipboard.writeText(t); showToast('Copied'); }catch{ showToast('Copy failed'); } }
     async function sharePrompt(){ const text=document.getElementById('prompt').innerText.trim(); if(!text) return showToast('Nothing to share'); if(navigator.share){ try{ await navigator.share({title:'HealingLensStudio Calm', text}); showToast('Shared'); return;}catch(e){} } try{ await navigator.clipboard.writeText(text); showToast('Sharing not supported — copied'); }catch{ showToast('Could not share'); } }
 
@@ -194,77 +189,99 @@
       const el = document.getElementById('favList');
       if (!favorites.length){ el.innerHTML = '<p>No favorites yet.</p>'; return; }
       el.innerHTML = favorites.map((f,i)=>`<div style="margin-bottom:12px;white-space:pre-wrap">${escapeHtml(f)}<div style="margin-top:6px"><button data-use="${i}">Use</button> <button data-remove="${i}" class="secondary">Remove</button></div></div>`).join('');
-      el.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click', (e)=>{ const i=+b.dataset.remove; favorites.splice(i,1); localStorage.setItem('favorites', JSON.stringify(favorites)); renderFavorites(); showToast('Removed'); }));
-      el.querySelectorAll('[data-use]').forEach(b=>b.addEventListener('click', (e)=>{ const i=+b.dataset.use; setPromptText(favorites[i]); closeFavorites(); showToast('Loaded favorite'); }));
+      el.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click', ()=>{ const i=+b.dataset.remove; favorites.splice(i,1); localStorage.setItem('favorites', JSON.stringify(favorites)); renderFavorites(); showToast('Removed'); }));
+      el.querySelectorAll('[data-use]').forEach(b=>b.addEventListener('click', ()=>{ const i=+b.dataset.use; setPromptText(favorites[i]); closeFavorites(); showToast('Loaded favorite'); }));
     }
-
     function addFavorite(){ const t=document.getElementById('prompt').innerText; if(!t) return showToast('Nothing to save'); if(!favorites.includes(t)){ favorites.push(t); localStorage.setItem('favorites', JSON.stringify(favorites)); showToast('Saved to favorites'); } else showToast('Already saved'); }
+
     function escapeHtml(text){ return text.replace(/[&<>"'`=\/]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#96;','=':'&#61;'}[s])); }
 
-    // breathing
-    function startBreathing(duration){ const circle=document.getElementById('breatheCircle'); if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){ showToast('Reduced motion enabled'); return; } circle.style.display='block'; if(breathAnim) breathAnim.cancel(); const cycle=8000; const iterations=Math.max(1,Math.round(duration/cycle)); breathAnim = circle.animate([{transform:'scale(1)'},{transform:'scale(1.6)'},{transform:'scale(1)'}], {duration:cycle, iterations, easing:'ease-in-out'}); showToast('Breathing started'); breathAnim.onfinish = ()=>{ circle.style.display='none'; breathAnim=null; showToast('Breathing finished'); }; }
-    function stopBreathing(){ if(breathAnim){ breathAnim.cancel(); breathAnim=null; document.getElementById('breatheCircle').style.display='none'; showToast('Breathing stopped'); } }
+    // breathing — simple circle animation (restored)
+    function startBreathing(){
+      const circle = document.getElementById('breatheCircle');
+      circle.style.display = 'block';
+      if (breathAnim) breathAnim.cancel();
+      breathAnim = circle.animate([
+        { transform: 'scale(1)', background: 'var(--accent)' },
+        { transform: 'scale(1.5)', background: 'var(--accent-2)' },
+        { transform: 'scale(1)', background: 'var(--accent)' }
+      ], { duration: 8000, iterations: 4, easing: 'ease-in-out' });
+      showToast('🫁 Follow the circle to breathe');
+      breathAnim.onfinish = () => { circle.style.display = 'none'; breathAnim = null; showToast('Breathing complete'); };
+    }
 
-    // toast
+    // toast helper
     let toastTimer = null;
     function showToast(msg, ms=1400){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.style.display='none', ms); }
 
-    // walkthrough steps + auto-scroll
+    // walkthrough overlay & logic (auto-scroll included)
     const walkthroughSteps = [
       { sel:'#newBtn', text:'Tap 🌸 New to get a calming prompt.' },
       { sel:'#shareBtn', text:'Tap 📤 Share to send this prompt to a friend.' },
       { sel:'#startBreath', text:'Tap ▶ Start to follow the breathing circle.' }
     ];
 
-    function startWalkthroughIfNeeded(){ const key='hl_walk_v1'; if (localStorage.getItem(key)) return; startWalkthrough(0); }
-    async function startWalkthrough(index){
+    function startWalkthroughIfNeeded(){
+      const key = 'hl_walk_v1';
+      if (localStorage.getItem(key)) return;
+      startWalkthrough(0);
+    }
+
+    function startWalkthrough(index){
       const overlay = document.getElementById('walkOverlay');
       const hl = document.getElementById('walkHighlight');
       const tip = document.getElementById('walkTooltip');
       const step = walkthroughSteps[index];
-      if (!step) return;
-      // find target
+      if (!step) { overlay.style.display='none'; overlay.setAttribute('aria-hidden','true'); return; }
+
+      document.body.style.overflow = 'hidden';
+      overlay.style.display = 'flex';
+      overlay.setAttribute('aria-hidden','false');
+
       const target = document.querySelector(step.sel);
-      if (!target){ overlay.style.display='none'; return; }
-      // auto-scroll so target is visible (center)
-      try {
-        target.scrollIntoView({behavior:'smooth', block:'center', inline:'center'});
-        // wait briefly for scroll to finish / position to settle
-        await new Promise(r=>setTimeout(r, 420));
-      } catch(e) { /* ignore */ }
-
-      const rect = target.getBoundingClientRect();
-      const pad = 10;
-      hl.style.width = (rect.width + pad*2) + 'px';
-      hl.style.height = (rect.height + pad*2) + 'px';
-      hl.style.left = (rect.left - pad) + 'px';
-      hl.style.top = (rect.top - pad) + 'px';
-
-      // position tooltip in available space
-      const tooltip = document.getElementById('walkTooltip');
-      const spaceBelow = window.innerHeight - rect.bottom;
-      if (spaceBelow > 140) {
-        tooltip.style.left = Math.max(12, rect.left) + 'px';
-        tooltip.style.top = (rect.bottom + 12) + 'px';
-      } else {
-        tooltip.style.left = Math.max(12, rect.left) + 'px';
-        tooltip.style.top = Math.max(12, rect.top - 140) + 'px';
+      if (!target){
+        hl.style.width = '0px'; hl.style.height = '0px';
+        tip.style.left = '50%'; tip.style.top = '50%';
+        document.getElementById('walkText').innerText = step.text;
+        document.getElementById('walkPrev').style.display = index>0 ? 'inline-block' : 'none';
+        document.getElementById('walkNext').style.display = index < walkthroughSteps.length-1 ? 'inline-block' : 'none';
+        document.getElementById('walkNext').onclick = ()=> startWalkthrough(index+1);
+        document.getElementById('walkPrev').onclick = ()=> startWalkthrough(index-1);
+        document.getElementById('walkClose').onclick = ()=> { overlay.style.display='none'; overlay.setAttribute('aria-hidden','true'); document.body.style.overflow=''; localStorage.setItem('hl_walk_v1','1'); };
+        return;
       }
 
-      document.getElementById('walkText').innerText = step.text;
-      overlay.style.display='flex'; overlay.setAttribute('aria-hidden','false');
-      document.getElementById('walkPrev').style.display = index>0 ? 'inline-block' : 'none';
-      document.getElementById('walkNext').style.display = index < walkthroughSteps.length-1 ? 'inline-block' : 'none';
+      target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
 
-      document.getElementById('walkNext').onclick = ()=> startWalkthrough(index+1);
-      document.getElementById('walkPrev').onclick = ()=> startWalkthrough(index-1);
-      document.getElementById('walkClose').onclick = ()=> { overlay.style.display='none'; overlay.setAttribute('aria-hidden','true'); localStorage.setItem('hl_walk_v1','1'); };
+      const WAIT_MS = 380;
+      setTimeout(() => {
+        const rect = target.getBoundingClientRect();
+        const pad = 10;
+        hl.style.width = (rect.width + pad*2) + 'px';
+        hl.style.height = (rect.height + pad*2) + 'px';
+        hl.style.left = (window.scrollX + rect.left - pad) + 'px';
+        hl.style.top  = (window.scrollY + rect.top - pad) + 'px';
+
+        const spaceBelow = window.innerHeight - (rect.bottom);
+        if (spaceBelow > 160) {
+          tip.style.top = (window.scrollY + rect.bottom + 12) + 'px';
+        } else {
+          tip.style.top = Math.max(12, (window.scrollY + rect.top - 130)) + 'px';
+        }
+        tip.style.left = '50%';
+        tip.style.transform = 'translateX(-50%)';
+
+        document.getElementById('walkText').innerText = step.text;
+        document.getElementById('walkPrev').style.display = index>0 ? 'inline-block' : 'none';
+        document.getElementById('walkNext').style.display = index < walkthroughSteps.length-1 ? 'inline-block' : 'none';
+        document.getElementById('walkNext').onclick = ()=> startWalkthrough(index+1);
+        document.getElementById('walkPrev').onclick = ()=> startWalkthrough(index-1);
+        document.getElementById('walkClose').onclick = ()=> { overlay.style.display='none'; overlay.setAttribute('aria-hidden','true'); document.body.style.overflow=''; localStorage.setItem('hl_walk_v1','1'); };
+
+      }, WAIT_MS);
     }
 
-    // sticky mobile toggle
-    function setupSticky(){ const sticky=document.getElementById('breathSticky'); if (window.innerWidth<=520) sticky.style.display='flex'; else sticky.style.display='none'; }
-
-    // events & bindings
+    // bindings
     document.getElementById('newBtn').addEventListener('click', newPrompt);
     document.getElementById('copyBtn').addEventListener('click', copyPrompt);
     document.getElementById('shareBtn').addEventListener('click', sharePrompt);
@@ -274,20 +291,17 @@
     document.getElementById('closeFav2').addEventListener('click', closeFavorites);
     document.getElementById('favoritesBackdrop').addEventListener('click', closeFavorites);
 
-    document.getElementById('startBreath').addEventListener('click', ()=> startBreathing(+document.getElementById('breathDur').value));
-    document.getElementById('stopBreath').addEventListener('click', stopBreathing);
-    document.getElementById('startBreathSticky').addEventListener('click', ()=> startBreathing(+document.getElementById('breathDurSticky').value));
-    document.getElementById('stopBreathSticky').addEventListener('click', stopBreathing);
+    document.getElementById('startBreath').addEventListener('click', startBreathing);
 
     document.getElementById('category').addEventListener('change', newPrompt);
     document.querySelectorAll('input[name="mode"]').forEach(r=> r.addEventListener('change', newPrompt));
-    window.addEventListener('resize', ()=> setupSticky());
+    window.addEventListener('resize', ()=>{ /* no-op, kept for compatibility */ });
 
     // initial load
-    window.addEventListener('load', ()=>{ setupSticky(); showOnboardIfNeeded(); loadLibrary(); startWalkthroughIfNeeded(); });
+    window.addEventListener('load', ()=>{ showOnboardIfNeeded(); loadLibrary(); startWalkthroughIfNeeded(); });
 
     // expose for debugging
-    window.healingLens = { newPrompt, addFavorite, openFavorites, loadLibrary, startBreathing, stopBreathing };
+    window.healingLens = { newPrompt, addFavorite, openFavorites, loadLibrary, startBreathing };
 
   </script>
 </body>
