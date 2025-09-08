@@ -1,381 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HealingLensStudio Calm</title>
 
-  <!-- PWA & Mobile -->
+  <!-- Manifest for PWA support -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#F5F1EC">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="HealingLensStudio Calm">
   <link rel="apple-touch-icon" href="logo.png">
 
-  <!-- Fonts (replace with your chosen fonts / URLs) -->
-  <!-- Example: <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Libre+Baskerville&display=swap" rel="stylesheet"> -->
-  <!-- preconnect for performance -->
-  <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
-
   <style>
-    :root{
-      --bg-1: #f5f1ec;
-      --bg-2: #e6f0ec;
-      --muted: #444;
-      --accent: #EED9D0;
-      --accent-2: #D5E0D5;
-      --text: #2E2E2E;
-      --card-shadow: 0 6px 20px rgba(0,0,0,0.08);
-      --radius: 16px;
-      --focus: 3px solid rgba(37,110,85,0.14);
-      --max-width: 720px;
-      font-family: 'Libre Baskerville', serif;
-    }
-
-    * { box-sizing: border-box; }
-    html,body { height: 100%; }
     body {
       margin: 0;
-      background: linear-gradient(135deg, var(--bg-1), var(--bg-2), #fdfcfa);
-      color: var(--text);
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      padding:28px 20px;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
+      font-family: 'Libre Baskerville', serif;
+      background: linear-gradient(135deg, #f5f1ec, #e6f0ec, #fdfcfa);
+      color: #2E2E2E;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      text-align: center;
     }
 
-    .container {
-      width:100%;
-      max-width: var(--max-width);
-      text-align:center;
-      padding-bottom:48px;
+    .logo img {
+      width: 120px;
+      margin: 15px auto;
+      display: block;
     }
-
-    .logo img { width: 120px; display:block; margin:10px auto; }
 
     h1 {
       font-family: 'Poppins', sans-serif;
       font-size: 1.8rem;
-      margin: 6px 0 2px 0;
-      color: var(--text);
+      margin-bottom: 5px;
     }
+
     h2 {
+      font-family: 'Libre Baskerville', serif;
       font-size: 1rem;
       font-style: italic;
-      margin: 0 0 8px 0;
-      color: #5a5a5a;
+      margin-bottom: 10px;
     }
 
     .app-description {
+      font-family: 'Libre Baskerville', serif;
       font-size: 1rem;
-      color: var(--muted);
-      max-width: 640px;
-      margin: 10px auto 18px auto;
+      color: #444;
+      max-width: 500px;
+      margin: 10px auto 20px auto;
       line-height: 1.6;
     }
 
-    .controls {
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:center;
-      align-items:center;
-      margin-bottom:18px;
-    }
-
-    fieldset { border: none; padding: 0; margin: 0; display:flex; gap:12px; align-items:center; }
-    legend { font-weight:600; margin-right:8px; font-size:0.95rem; color:#444; }
-
-    select, button {
-      min-height:44px;
-      padding:10px 16px;
-      border-radius:12px;
-      border: none;
-      font-size:1rem;
-      cursor:pointer;
-      font-family:'Poppins',sans-serif;
-    }
-
-    select { background:white; box-shadow: var(--card-shadow); }
-    button.primary {
-      background: var(--accent);
-      color: var(--text);
-      transition: transform .08s ease, background .22s;
-    }
-    button.secondary {
-      background: transparent;
-      border:1px solid rgba(0,0,0,0.06);
-      color: var(--text);
-    }
-    button:active { transform: translateY(1px); }
-    button:focus { outline: none; box-shadow: var(--focus); }
-
     .prompt-box {
       background: #fff;
-      border-radius: var(--radius);
+      border-radius: 16px;
       padding: 20px;
-      max-width: 640px;
-      margin: 0 auto 14px auto;
-      box-shadow: var(--card-shadow);
-      text-align:left;
+      max-width: 500px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+      text-align: left;
       white-space: pre-wrap;
     }
 
     .prompt {
-      font-size:1.05rem;
-      line-height:1.6;
-      color: #2b2b2b;
-      margin:0;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin: 0;
     }
 
-    .meta-row { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:12px; flex-wrap:wrap; }
-    .favorites { margin-top:18px; text-align:left; max-width:640px; margin-left:auto; margin-right:auto; }
-    .fav-list { list-style:none; padding:0; margin:8px 0 0 0; }
-    .fav-list li { background: #fff; padding:12px; border-radius:12px; margin-bottom:8px; display:flex; justify-content:space-between; gap:8px; align-items:flex-start; box-shadow: var(--card-shadow); }
-    .fav-list small { color:#666; display:block; margin-top:6px; font-size:0.88rem; }
-
-    .breathe {
-      margin-top:18px;
-      display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap;
+    .controls {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-bottom: 10px;
     }
+
+    button, select {
+      min-height: 44px;
+      margin: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    button {
+      background: #EED9D0;
+      color: #2E2E2E;
+      transition: background 0.3s;
+    }
+
+    button:hover, button:focus {
+      background: #D5E0D5;
+      outline: none;
+    }
+
+    .favorites {
+      margin-top: 20px;
+      max-width: 500px;
+      text-align: left;
+    }
+
+    .favorites ul { padding-left: 16px; }
+
     .breathe-circle {
-      width:100px; height:100px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; box-shadow: var(--card-shadow);
-      transition: transform 3s ease;
+      width: 100px; height: 100px;
+      margin: 20px auto;
+      border-radius: 50%;
+      background: #EED9D0;
+      display: none;
     }
 
-    .footer { font-size:0.82rem; margin-top:22px; color:#6b6b6b; font-style:italic; text-align:center; }
+    .footer {
+      font-size: 0.8rem;
+      margin-top: 20px;
+      font-style: italic;
+    }
 
-    /* Toast */
-    .toast {
+    @media (max-width: 600px) {
+      h1 { font-size: 1.4rem; }
+      .prompt { font-size: 1rem; }
+      button, select { font-size: 0.9rem; padding: 10px; }
+    }
+
+    /* simple toast */
+    #toast {
       position: fixed;
       left: 50%;
       transform: translateX(-50%);
-      bottom: 28px;
-      background: rgba(0,0,0,0.85);
+      bottom: 24px;
+      background: rgba(0,0,0,0.8);
       color: white;
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 0.95rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: none;
       z-index: 9999;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .22s ease, transform .22s ease;
-    }
-    .toast.show { opacity:1; transform: translateX(-50%) translateY(-6px); pointer-events:auto; }
-
-    /* Accessible focus for keyboard users */
-    :focus { outline: none; box-shadow: var(--focus); border-radius:8px; }
-
-    /* Responsive */
-    @media (max-width:600px){
-      h1{ font-size:1.4rem; }
-      .prompt { font-size:1rem; }
-      .controls { gap:8px; }
-    }
-
-    /* Respect reduced motion */
-    @media (prefers-reduced-motion: reduce) {
-      .breathe-circle, .prompt-box { transition: none !important; animation: none !important; }
+      font-size: 0.95rem;
     }
   </style>
 </head>
 <body>
-  <div class="container" role="main">
-    <div class="logo" aria-hidden="true">
-      <picture>
-        <source srcset="logo.webp" type="image/webp">
-        <img src="logo.png" alt="HealingLensStudio logo">
-      </picture>
-    </div>
-
-    <h1>HealingLensStudio Calm</h1>
-    <h2>For the Quiet in You 🌿</h2>
-
-    <p class="app-description">
-      A gentle digital calm corner — with daily prompts, affirmations, and soft practices 
-      for your nervous system.<br>Free. Always here. For the quiet in you.
-    </p>
-
-    <div class="controls" aria-hidden="false">
-      <fieldset id="modeField" aria-label="Choose mode">
-        <legend class="sr-only">Mode</legend>
-        <label>
-          <input type="radio" name="mode" value="prompt" checked> Prompts
-        </label>
-        <label>
-          <input type="radio" name="mode" value="affirmation"> Affirmations
-        </label>
-      </fieldset>
-
-      <label for="category" class="sr-only">Category</label>
-      <select id="category" aria-label="Choose category">
-        <option value="mindfulness">🌿 Mindfulness</option>
-        <option value="movement">✨ Movement</option>
-        <option value="kindness">💛 Kindness</option>
-        <option value="creativity">🎨 Creativity</option>
-      </select>
-
-      <button class="primary" id="newBtn">🌸 New</button>
-      <button class="secondary" id="copyBtn">📋 Copy</button>
-      <button class="secondary" id="saveBtn">💾 Save</button>
-      <button class="secondary" id="favBtn">⭐ Favorite</button>
-      <button class="secondary" id="viewFavBtn">📖 View</button>
-    </div>
-
-    <div class="prompt-box" id="promptArea" aria-live="polite">
-      <p id="prompt" class="prompt">✨ Loading your calm…</p>
-      <div class="meta-row" aria-hidden="true">
-        <small id="promptHint">Breathe this in. Try writing one line in your journal.</small>
-        <small id="favCount">❤ 0 favorites</small>
-      </div>
-    </div>
-
-    <div class="breathe" aria-label="Breathing exercise">
-      <div class="breathe-circle" id="breatheCircle" aria-hidden="true"></div>
-      <div>
-        <div style="margin-bottom:8px;font-size:0.95rem;color:#444">Breathe With Me</div>
-        <div style="display:flex;gap:8px;justify-content:center">
-          <button class="primary" id="startBreath">🫁 Start</button>
-          <button class="secondary" id="stopBreath">■ Stop</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="favorites" id="favoritesPanel" hidden>
-      <h4>Your Favorites</h4>
-      <ul class="fav-list" id="favList"></ul>
-    </div>
-
-    <div class="footer">HealingLensStudio | For the Quiet in You</div>
+  <div class="logo" aria-hidden="true">
+    <picture>
+      <source srcset="logo.webp" type="image/webp">
+      <img src="logo.png" alt="HealingLensStudio Logo">
+    </picture>
   </div>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <h1>HealingLensStudio Calm</h1>
+  <h2>For the Quiet in You 🌿</h2>
+  <p class="app-description">
+    A gentle digital calm corner — with daily prompts, affirmations, and soft practices 
+    for your nervous system.<br>
+    Free. Always here. For the quiet in you.
+  </p>
 
-  <!-- html2canvas for Save-as-image (existing) -->
+  <div class="controls" role="group" aria-label="Mode and category">
+    <label><input type="radio" name="mode" value="prompt" checked> Prompts</label>
+    <label><input type="radio" name="mode" value="affirmation"> Affirmations</label>
+
+    <select id="category" aria-label="Choose category">
+      <option value="mindfulness">🌿 Mindfulness</option>
+      <option value="movement">✨ Movement</option>
+      <option value="kindness">💛 Kindness</option>
+      <option value="creativity">🎨 Creativity</option>
+    </select>
+  </div>
+
+  <div class="prompt-box" id="promptArea">
+    <p id="prompt" class="prompt">✨ Loading your calm…</p>
+  </div>
+
+  <div class="controls" aria-hidden="false">
+    <button id="newBtn">🌸 New</button>
+    <button id="copyBtn">📋 Copy</button>
+    <button id="saveBtn">💾 Save</button>
+    <button id="favBtn">⭐ Favorite</button>
+    <button id="viewFavBtn">📖 View Favorites</button>
+  </div>
+
+  <div class="favorites" id="favorites"></div>
+
+  <h3>Breathe With Me</h3>
+  <div class="breathe-circle" id="breathe-circle" aria-hidden="true"></div>
+  <button id="startBreath">🫁 Start</button>
+
+  <div class="footer">HealingLensStudio | For the Quiet in You</div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- html2canvas for Save-as-image -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <script>
-    // Content
-    const prompts = {
-      mindfulness: [
-        "Pause. Place one hand on your chest. Feel one full breath enter and leave.",
-        "Notice one sound around you that feels calming. Stay with it.",
-        "Close your eyes and imagine your favorite place in nature.",
-        "Unclench your jaw. Drop your shoulders. Exhale slowly.",
-        "Sip water slowly — feel it as a reset ritual.",
-        "Look outside. Find something still and breathe with it.",
-        "Count your breaths up to ten, then begin again.",
-        "Touch something near you and notice its texture.",
-        "Imagine your breath as waves. Let them wash in and out.",
-        "Whisper a kind word to yourself as you would to a friend."
-      ],
-      movement: [
-        "Stretch your arms overhead like you’re greeting the sun.",
-        "Roll your shoulders back three times.",
-        "Sway gently side to side like tall grass.",
-        "Rotate your wrists and ankles, thanking them.",
-        "Stand tall. Imagine a string lifting your head.",
-        "Shake your hands as if letting go of the day.",
-        "Stretch your spine tall, then fold forward gently.",
-        "Tap your feet on the floor rhythmically.",
-        "Stretch your side body with one arm overhead.",
-        "Circle your shoulders slowly like waves."
-      ],
-      kindness: [
-        "Whisper to yourself: 'I am doing enough.'",
-        "Forgive yourself for something small today.",
-        "Whisper your name with kindness.",
-        "Say softly: 'I am allowed to rest without guilt.'",
-        "Affirm: 'I am enough exactly as I am.'",
-        "Imagine hugging your younger self.",
-        "Whisper: 'I am safe to soften.'",
-        "Say: 'I belong here, exactly as I am.'",
-        "Affirm: 'Rest is medicine.'",
-        "Say: 'Love doesn’t have to be earned.'"
-      ],
-      creativity: [
-        "Write a one-line poem about the sky.",
-        "Sketch something near you without judgment.",
-        "Write: 'Today I want to remember…'",
-        "Imagine a safe place. Describe it.",
-        "Doodle for 2 minutes with no rules.",
-        "Write one sentence to your future self.",
-        "Draw a symbol of how you feel today.",
-        "Write: 'The story I am telling myself is…'",
-        "Sketch something that makes you smile.",
-        "Write a haiku about this moment."
-      ]
-    };
+    // -- Data will be loaded from prompts.json
+    let prompts = {};
+    let affirmations = {};
 
-    const affirmations = {
-      mindfulness: ["I can return to my breath anytime.", "This moment is enough."],
-      movement: ["My body deserves gentle movement.", "I release tension step by step."],
-      kindness: ["I am worthy of love exactly as I am.", "Softness is strength."],
-      creativity: ["Expression is healing.", "My ideas do not need to be perfect."]
-    };
+    async function loadLibrary() {
+      try {
+        // Use a relative path so it works on GitHub Pages subpath
+        const res = await fetch('./prompts.json', { cache: "no-store" });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const lib = await res.json();
 
-    // State
+        if (lib && lib.prompts && lib.affirmations) {
+          prompts = lib.prompts;
+          affirmations = lib.affirmations;
+          console.log('Library loaded:', {prompts, affirmations});
+          // show initial prompt
+          newPrompt();
+          showToast('Library loaded');
+          return;
+        }
+      } catch (e) {
+        console.warn('Could not load prompts.json — check path or file', e);
+        showToast('Using built-in library (or none) — check console');
+      }
+    }
+
+    // -- UI state
     const lastPromptByCategory = {};
-    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    const promptEl = document.getElementById('prompt');
-    const favCountEl = document.getElementById('favCount');
-    const toastEl = document.getElementById('toast');
-    const favPanel = document.getElementById('favoritesPanel');
-    const favList = document.getElementById('favList');
+    let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
 
-    // Utils
-    function showToast(msg, ms = 1800) {
-      toastEl.textContent = msg;
-      toastEl.classList.add('show');
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(()=> toastEl.classList.remove('show'), ms);
-    }
-
-    function getMode() {
-      return document.querySelector('input[name="mode"]:checked').value;
-    }
-    function getCategory() {
-      return document.getElementById('category').value;
-    }
-
-    // New prompt
     function newPrompt() {
-      const category = getCategory();
-      const mode = getMode();
-      const set = (mode === 'prompt' ? prompts : affirmations)[category] || [];
-      if (!set.length) { promptEl.innerText = 'No items in this category.'; return; }
+      const category = document.getElementById("category").value;
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const set = (mode === "prompt" ? prompts : affirmations)[category];
+
+      // If library failed to load, handle gracefully
+      if (!set || !set.length) {
+        document.getElementById("prompt").innerText = "No items available for this category. Please check prompts.json.";
+        return;
+      }
+
       let randomIndex;
       do {
         randomIndex = Math.floor(Math.random() * set.length);
       } while (randomIndex === lastPromptByCategory[category] && set.length > 1);
       lastPromptByCategory[category] = randomIndex;
       const text = set[randomIndex];
-      promptEl.innerText = text + (mode === 'prompt' ? "\n\n🌿 Breathe this in. Try writing one line in your journal." : "");
+      document.getElementById("prompt").innerText = text + (mode === "prompt" ? "\n\n🌿 Breathe this in. Try writing one line in your journal." : "");
     }
 
-    // Copy
-    function copyPrompt() {
-      const text = promptEl.innerText.trim();
-      if (!text) { showToast('Nothing to copy'); return; }
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(()=> showToast('Prompt copied'), ()=> fallbackCopy(text));
-      } else {
-        fallbackCopy(text);
+    // Copy with feedback
+    async function copyPrompt() {
+      const text = document.getElementById("prompt").innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Prompt copied!');
+      } catch (e) {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          showToast('Prompt copied!');
+        } catch (err) {
+          showToast('Copy failed');
+        }
+        ta.remove();
       }
     }
-    function fallbackCopy(text) {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand('copy'); showToast('Prompt copied'); } catch(e) { showToast('Copy failed'); }
-      ta.remove();
-    }
 
-    // Save as image
+    // Save as image using html2canvas
     function savePrompt() {
       const node = document.querySelector('.prompt-box');
       if (!window.html2canvas) {
@@ -394,97 +290,78 @@
 
     // Favorites
     function addFavorite() {
-      const text = promptEl.innerText.trim();
-      if (!text) { showToast('No prompt to save'); return; }
-      // avoid duplicates (trimmed)
+      const text = document.getElementById("prompt").innerText;
+      if (!text) { showToast('Nothing to save'); return; }
       if (!favorites.includes(text)) {
         favorites.push(text);
-        localStorage.setItem('favorites', JSON.stringify(favorites));
-        showToast('⭐ Saved to favorites');
-        renderFavorites();
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        showToast('⭐ Saved to favorites!');
       } else {
         showToast('Already in favorites');
       }
     }
 
-    function renderFavorites() {
-      favCountEl.textContent = `❤ ${favorites.length} favorites`;
-      if (favorites.length === 0) {
-        favList.innerHTML = '<li>No favorites yet.</li>';
+    function viewFavorites() {
+      const container = document.getElementById('favorites');
+      if (!favorites.length) {
+        container.innerHTML = '<h4>Your Favorites:</h4><ul><li>No favorites yet.</li></ul>';
         return;
       }
-      favList.innerHTML = favorites.map((f, idx) => `
-        <li>
-          <div style="flex:1;white-space:pre-wrap">${escapeHtml(f)}</div>
-          <div style="margin-left:12px;display:flex;flex-direction:column;gap:6px">
-            <button class="secondary" data-remove="${idx}" aria-label="Remove favorite ${idx}">Remove</button>
-            <button class="secondary" data-use="${idx}" aria-label="Use favorite ${idx}">Use</button>
-          </div>
-        </li>
-      `).join('');
+      const list = favorites.map((f, idx) => `<li style="margin-bottom:8px;"><div style="white-space:pre-wrap;">${escapeHtml(f)}</div><small><button data-use="${idx}" style="margin-top:6px">Use</button> <button data-remove="${idx}">Remove</button></small></li>`).join('');
+      container.innerHTML = `<h4>Your Favorites:</h4><ul>${list}</ul>`;
       // attach handlers
-      favList.querySelectorAll('[data-remove]').forEach(btn => {
-        btn.addEventListener('click', e => {
-          const i = Number(btn.dataset.remove);
-          favorites.splice(i,1);
-          localStorage.setItem('favorites', JSON.stringify(favorites));
-          renderFavorites();
-          showToast('Removed favorite');
-        });
-      });
-      favList.querySelectorAll('[data-use]').forEach(btn => {
-        btn.addEventListener('click', e => {
-          const i = Number(btn.dataset.use);
-          promptEl.innerText = favorites[i];
-          showToast('Loaded favorite');
-        });
-      });
+      container.querySelectorAll('[data-remove]').forEach(btn => btn.addEventListener('click', (e) => {
+        const i = Number(btn.dataset.remove);
+        favorites.splice(i,1);
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        viewFavorites();
+        showToast('Removed favorite');
+      }));
+      container.querySelectorAll('[data-use]').forEach(btn => btn.addEventListener('click', (e) => {
+        const i = Number(btn.dataset.use);
+        document.getElementById('prompt').innerText = favorites[i];
+        showToast('Loaded favorite');
+      }));
     }
 
-    // Small helper for escaping HTML when rendering favorites
     function escapeHtml(text) {
       return text.replace(/[&<>"'`=\/]/g, function (s) {
         return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#61;'}[s];
       });
     }
 
-    // View/hide favorites panel
-    function toggleFavorites() {
-      favPanel.hidden = !favPanel.hidden;
-      if (!favPanel.hidden) renderFavorites();
-    }
-
-    // Breathing animation (controlled)
+    // Breathing
     let breathAnim = null;
     function startBreathing() {
-      const circle = document.getElementById('breatheCircle');
+      const circle = document.getElementById("breathe-circle");
       if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         showToast('Reduced motion preference enabled');
         return;
       }
       circle.style.display = 'block';
-      // Simple JS animation using Web Animations API (widely supported)
       if (breathAnim) breathAnim.cancel();
       breathAnim = circle.animate([
         { transform: 'scale(1)', offset: 0 },
-        { transform: 'scale(1.55)', offset: 0.5 },
+        { transform: 'scale(1.5)', offset: 0.5 },
         { transform: 'scale(1)', offset: 1 }
       ], {
         duration: 8000,
-        iterations: Infinity,
+        iterations: 4,
         easing: 'ease-in-out'
       });
       showToast('🫁 Inhale as the circle grows, exhale as it shrinks.');
+      // when done, hide
+      breathAnim.onfinish = () => { circle.style.display = 'none'; breathAnim = null; };
     }
 
-    function stopBreathing() {
-      const circle = document.getElementById('breatheCircle');
-      if (breathAnim) {
-        breathAnim.cancel();
-        breathAnim = null;
-        circle.style.transform = '';
-        showToast('Breathing stopped');
-      }
+    // toast helper
+    let toastTimer = null;
+    function showToast(msg, ms = 1600) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=> t.style.display = 'none', ms);
     }
 
     // Event bindings
@@ -492,28 +369,25 @@
     document.getElementById('copyBtn').addEventListener('click', copyPrompt);
     document.getElementById('saveBtn').addEventListener('click', savePrompt);
     document.getElementById('favBtn').addEventListener('click', addFavorite);
-    document.getElementById('viewFavBtn').addEventListener('click', toggleFavorites);
+    document.getElementById('viewFavBtn').addEventListener('click', viewFavorites);
     document.getElementById('startBreath').addEventListener('click', startBreathing);
-    document.getElementById('stopBreath').addEventListener('click', stopBreathing);
     document.getElementById('category').addEventListener('change', newPrompt);
     document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', newPrompt));
 
-    // Keyboard: pressing N for new, F for favorite, C for copy (when not in inputs)
+    // keyboard shortcuts (n = new, f = favorite, c = copy)
     document.addEventListener('keydown', (e) => {
-      if (e.target && ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
-      if (e.key.toLowerCase() === 'n') { newPrompt(); }
-      if (e.key.toLowerCase() === 'f') { addFavorite(); }
-      if (e.key.toLowerCase() === 'c') { copyPrompt(); }
+      if (e.target && ['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target.tagName)) return;
+      const k = e.key.toLowerCase();
+      if (k === 'n') newPrompt();
+      if (k === 'f') addFavorite();
+      if (k === 'c') copyPrompt();
     });
 
-    // On load
-    window.addEventListener('load', () => {
-      renderFavorites();
-      newPrompt();
-    });
+    // load library on start
+    window.onload = () => { loadLibrary(); };
 
-    // Expose a small API if you want to call from console
-    window.healingLens = { newPrompt, addFavorite, copyPrompt, savePrompt, startBreathing, stopBreathing };
+    // expose for console if needed
+    window.healingLens = { loadLibrary, newPrompt, addFavorite, viewFavorites };
   </script>
 </body>
 </html>
