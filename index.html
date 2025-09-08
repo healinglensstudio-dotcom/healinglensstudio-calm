@@ -101,14 +101,22 @@
       outline: none;
     }
 
-    .favorites {
-      margin-top: 10px;
+    .fav-panel {
+      width:100%;
       max-width: 500px;
-      text-align: left;
+      margin-top: 12px;
       display: none;
+      text-align: left;
     }
 
-    .favorites ul { padding-left: 16px; }
+    .fav-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    }
+
+    .fav-item { margin-bottom: 12px; white-space: pre-wrap; }
 
     .breathe-circle {
       width: 120px; height: 120px;
@@ -182,21 +190,33 @@
     <button id="newBtn">🌸 New</button>
     <button id="copyBtn">📋 Copy</button>
     <button id="shareBtn">📤 Share</button>
-    <button id="favBtn">⭐ Favorite</button>
+    <!-- SINGLE Favorites top button -->
     <button id="toggleFavBtn">📖 Favorites</button>
   </div>
 
-  <div class="favorites" id="favorites"></div>
+  <!-- Collapsible favorites panel (single place to Save + manage) -->
+  <div class="fav-panel" id="favPanel" aria-hidden="true">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <strong>Favorites</strong>
+        <button id="saveCurrentBtn" style="padding:6px 10px;">⭐ Save current</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button id="clearFavBtn" style="padding:6px 10px;">Clear all</button>
+        <button id="closeFavBtn" style="padding:6px 10px;">Close</button>
+      </div>
+    </div>
+    <div class="fav-card" id="favList">No favorites yet.</div>
+  </div>
 
   <h3>Breathe With Me</h3>
-  <div class="breathe-circle" id="breathe-circle" aria-hidden="true"></div>
+  <div class="breathe-circle" id="breatheCircle" aria-hidden="true"></div>
   <div class="controls">
     <button id="startBreath">▶ Start</button>
     <button id="stopBreath">■ Stop</button>
   </div>
 
   <div class="footer">HealingLensStudio | For the Quiet in You</div>
-
   <div id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -204,12 +224,27 @@
     let prompts = {};
     let affirmations = {};
 
+    // minimal fallback (only used if prompts.json missing)
+    const FALLBACK = {
+      prompts: {
+        mindfulness: ["Pause. Place one hand on your chest. Feel one full breath enter and leave."],
+        movement: ["Stretch your arms overhead like you’re greeting the sun."],
+        kindness: ["Whisper to yourself: 'I am enough.'"],
+        creativity: ["Write a one-line poem about the sky."]
+      },
+      affirmations: {
+        mindfulness: ["I can return to my breath anytime."],
+        movement: ["My body deserves gentle movement."],
+        kindness: ["I am worthy of love exactly as I am."],
+        creativity: ["Expression is healing."]
+      }
+    };
+
     async function loadLibrary() {
       try {
         const res = await fetch('./prompts.json', { cache: "no-store" });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const lib = await res.json();
-
         if (lib && lib.prompts && lib.affirmations) {
           prompts = lib.prompts;
           affirmations = lib.affirmations;
@@ -219,8 +254,11 @@
         }
       } catch (e) {
         console.warn('Could not load prompts.json — check path or file', e);
-        document.getElementById("prompt").innerText = "✨ Could not load prompts. Please check prompts.json.";
       }
+      // fallback
+      prompts = FALLBACK.prompts;
+      affirmations = FALLBACK.affirmations;
+      newPrompt();
     }
 
     const lastPromptByCategory = {};
@@ -267,62 +305,72 @@
       }
     }
 
-    function addFavorite() {
+    // Favorites (single button + panel)
+    function toggleFavPanel() {
+      const panel = document.getElementById('favPanel');
+      if (!panel) return;
+      if (panel.style.display === 'block') {
+        panel.style.display = 'none';
+        panel.setAttribute('aria-hidden','true');
+      } else {
+        renderFavorites();
+        panel.style.display = 'block';
+        panel.setAttribute('aria-hidden','false');
+      }
+    }
+
+    function saveCurrentToFavorites() {
       const text = document.getElementById("prompt").innerText;
-      if (!text) return;
+      if (!text) { showToast('Nothing to save'); return; }
       if (!favorites.includes(text)) {
         favorites.push(text);
         localStorage.setItem("favorites", JSON.stringify(favorites));
         showToast('⭐ Saved to favorites!');
+        renderFavorites();
       } else {
         showToast('Already saved');
       }
     }
 
-    function toggleFavorites() {
-      const container = document.getElementById("favorites");
-      if (container.style.display === "none" || !container.style.display) {
-        renderFavorites();
-        container.style.display = "block";
-      } else {
-        container.style.display = "none";
-      }
-    }
-
     function renderFavorites() {
-      const container = document.getElementById("favorites");
+      const el = document.getElementById('favList');
       if (!favorites.length) {
-        container.innerHTML = "<h4>Your Favorites:</h4><ul><li>No favorites yet.</li></ul>";
+        el.innerHTML = '<div>No favorites yet.</div>';
         return;
       }
-      const list = favorites.map((f, i) => `
-        <li style="margin-bottom:8px;">
-          <div style="white-space:pre-wrap;">${escapeHtml(f)}</div>
-          <button onclick="useFavorite(${i})">Use</button>
-          <button onclick="removeFavorite(${i})">Remove</button>
-        </li>`).join("");
-      container.innerHTML = `<h4>Your Favorites:</h4><ul>${list}</ul>`;
+      el.innerHTML = favorites.map((f,i)=>`
+        <div class="fav-item">
+          <div>${escapeHtml(f)}</div>
+          <div style="margin-top:6px; display:flex; gap:8px;">
+            <button data-use="${i}">Use</button>
+            <button data-remove="${i}">Remove</button>
+          </div>
+        </div>
+      `).join('');
+      // attach handlers
+      el.querySelectorAll('[data-use]').forEach(b=> b.addEventListener('click', ()=>{ const i=+b.dataset.use; document.getElementById('prompt').innerText = favorites[i]; showToast('Loaded'); }));
+      el.querySelectorAll('[data-remove]').forEach(b=> b.addEventListener('click', ()=>{ const i=+b.dataset.remove; favorites.splice(i,1); localStorage.setItem("favorites", JSON.stringify(favorites)); renderFavorites(); showToast('Removed'); }));
     }
 
-    function useFavorite(i) {
-      document.getElementById("prompt").innerText = favorites[i];
-    }
-
-    function removeFavorite(i) {
-      favorites.splice(i, 1);
-      localStorage.setItem("favorites", JSON.stringify(favorites));
-      renderFavorites();
+    function clearAllFavorites(){
+      if (!favorites.length) return showToast('No favorites');
+      if (!confirm('Clear all favorites?')) return;
+      favorites = []; localStorage.setItem("favorites", JSON.stringify(favorites)); renderFavorites(); showToast('Cleared');
     }
 
     function escapeHtml(text) {
-      return text.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+      return String(text).replace(/[&<>"'`=\/]/g, function (c) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#96;','=':'&#61;'}[c];
+      });
     }
 
     // Breathing
     let breathAnim = null;
     function startBreathing() {
-      const circle = document.getElementById("breathe-circle");
-      circle.style.display = "block";
+      const circle = document.getElementById("breatheCircle");
+      if (!circle) return;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { showToast('Reduced motion'); return; }
+      circle.style.display = 'block';
       if (breathAnim) breathAnim.cancel();
       breathAnim = circle.animate([
         { transform: "scale(1)", background: "#EED9D0" },
@@ -334,13 +382,14 @@
         easing: "ease-in-out"
       });
     }
+
     function stopBreathing() {
-      const circle = document.getElementById("breathe-circle");
+      const circle = document.getElementById("breatheCircle");
       if (breathAnim) breathAnim.cancel();
-      circle.style.display = "none";
+      circle.style.display = 'none';
     }
 
-    function showToast(msg, ms = 1500) {
+    function showToast(msg, ms = 1400) {
       const t = document.getElementById("toast");
       t.textContent = msg;
       t.style.display = "block";
@@ -351,8 +400,10 @@
     document.getElementById("newBtn").addEventListener("click", newPrompt);
     document.getElementById("copyBtn").addEventListener("click", copyPrompt);
     document.getElementById("shareBtn").addEventListener("click", sharePrompt);
-    document.getElementById("favBtn").addEventListener("click", addFavorite);
-    document.getElementById("toggleFavBtn").addEventListener("click", toggleFavorites);
+    document.getElementById("toggleFavBtn").addEventListener("click", toggleFavPanel);
+    document.getElementById("saveCurrentBtn").addEventListener("click", saveCurrentToFavorites);
+    document.getElementById("clearFavBtn").addEventListener("click", clearAllFavorites);
+    document.getElementById("closeFavBtn").addEventListener("click", toggleFavPanel);
     document.getElementById("startBreath").addEventListener("click", startBreathing);
     document.getElementById("stopBreath").addEventListener("click", stopBreathing);
     document.getElementById("category").addEventListener("change", newPrompt);
