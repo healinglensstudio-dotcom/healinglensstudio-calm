@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HealingLensStudio Calm</title>
 
+  <!-- Manifest for PWA support -->
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -12,48 +13,166 @@
   <link rel="apple-touch-icon" href="logo.png">
 
   <style>
-    :root{
-      --bg:#f5f6f4; --card:#fff; --accent:#EED9D0; --accent2:#D5E0D5; --text:#2E2E2E; --muted:#6b6b6b;
+    body {
+      margin: 0;
+      font-family: 'Libre Baskerville', serif;
+      background: linear-gradient(135deg, #f5f1ec, #e6f0ec, #fdfcfa);
+      color: #2E2E2E;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      text-align: center;
     }
-    html,body{height:100%;margin:0}
-    body{
-      font-family:'Libre Baskerville',serif;
-      background:linear-gradient(135deg,#f5f1ec,#e6f0ec,#fdfcfa);
-      color:var(--text); padding:20px; display:flex; flex-direction:column; align-items:center; text-align:center;
+
+    .logo img {
+      width: 120px;
+      margin: 15px auto;
+      display: block;
     }
-    .logo img{ width:120px; display:block; margin:8px auto; }
-    h1{ font-family:'Poppins',sans-serif; font-size:1.8rem; margin:6px 0 2px; }
-    h2{ font-style:italic; color:var(--muted); margin:0 0 10px; }
-    .app-description{ max-width:720px; color:var(--muted); margin:8px auto 14px; font-size:1rem; line-height:1.6; }
 
-    .controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center; margin:12px 0; }
-    .prompt-box{ background:var(--card); border-radius:12px; padding:18px; width:100%; max-width:760px; box-shadow:0 10px 26px rgba(0,0,0,0.06); text-align:left; white-space:pre-wrap; margin-bottom:12px; }
-    .prompt{ font-size:1.15rem; line-height:1.6; margin:0; }
+    h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+    }
 
-    button{ background:var(--accent); border:none; padding:10px 14px; border-radius:10px; cursor:pointer; font-family:'Poppins',sans-serif; }
-    button.secondary{ background:transparent; border:1px solid rgba(0,0,0,0.06); }
+    h2 {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1rem;
+      font-style: italic;
+      margin-bottom: 10px;
+    }
 
-    select{ padding:8px 12px; border-radius:8px; }
+    .app-description {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1rem;
+      color: #444;
+      max-width: 600px;
+      margin: 10px auto 20px auto;
+      line-height: 1.6;
+    }
 
-    /* favorites panel */
-    .fav-panel{ width:100%; max-width:760px; margin-top:12px; display:none; text-align:left; }
-    .fav-card{ background:var(--card); padding:12px; border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.06); }
-    .fav-item{ margin-bottom:12px; white-space:pre-wrap; }
+    .prompt-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      max-width: 600px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+      text-align: left;
+      white-space: pre-wrap;
+    }
 
-    .breathe-circle{ width:120px; height:120px; border-radius:50%; background:var(--accent); margin:18px auto; display:none; opacity:0; box-shadow:0 12px 30px rgba(0,0,0,0.06); transform-origin:center; }
-    .footer{ font-size:0.9rem; margin-top:18px; color:var(--muted); font-style:italic; }
-    #toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:22px; background:rgba(0,0,0,0.85); color:#fff; padding:8px 12px; border-radius:8px; display:none; z-index:9999; }
+    .prompt {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin: 0;
+    }
 
-    @media(max-width:600px){ .prompt{ font-size:1.02rem; } button, select{ min-width:42vw; } .breathe-circle{ width:100px; height:100px; } }
+    .controls {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-bottom: 10px;
+    }
+
+    button, select {
+      min-height: 44px;
+      margin: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    button {
+      background: #EED9D0;
+      color: #2E2E2E;
+      transition: background 0.3s;
+    }
+
+    button:hover, button:focus {
+      background: #D5E0D5;
+      outline: none;
+    }
+
+    .favorites-section {
+      max-width: 600px;
+      margin: 20px auto;
+      text-align: left;
+      display: none;
+    }
+
+    .favorites-section ul {
+      padding-left: 16px;
+    }
+
+    /* breathe circle: updated for mobile visibility */
+    .breathe-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #EED9D0;
+      margin: 18px auto;
+      display: none;           /* start hidden */
+      opacity: 0;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+      transform-origin: center center;
+      position: relative;
+      z-index: 20;
+    }
+
+    @keyframes breathe-fallback {
+      0%   { transform: scale(1); background: #EED9D0; }
+      50%  { transform: scale(1.6); background: #D5E0D5; }
+      100% { transform: scale(1); background: #EED9D0; }
+    }
+
+    .breathe-visible-fallback {
+      display: block !important;
+      opacity: 1 !important;
+      animation: breathe-fallback 6000ms ease-in-out 4 forwards;
+    }
+
+    .footer {
+      font-size: 0.8rem;
+      margin-top: 20px;
+      font-style: italic;
+    }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 24px;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: none;
+      z-index: 9999;
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
-  <div class="logo" aria-hidden="true"><img src="logo.png" alt="HealingLensStudio logo"></div>
+  <div class="logo" aria-hidden="true">
+    <picture>
+      <source srcset="logo.webp" type="image/webp">
+      <img src="logo.png" alt="HealingLensStudio Logo">
+    </picture>
+  </div>
+
   <h1>HealingLensStudio Calm</h1>
   <h2>For the Quiet in You 🌿</h2>
-
   <p class="app-description">
-    A gentle digital calm corner — with daily prompts, affirmations, and soft practices for your nervous system.<br>
+    A gentle digital calm corner — with daily prompts, affirmations, and soft practices 
+    for your nervous system.<br>
     Free. Always here. For the quiet in you.
   </p>
 
@@ -69,129 +188,246 @@
     </select>
   </div>
 
-  <div class="prompt-box"><p id="prompt" class="prompt">✨ Loading your calm…</p></div>
-
-  <div class="controls">
-    <button id="newBtn">🌸 New</button>
-    <button id="copyBtn" class="secondary">📋 Copy</button>
-    <button id="shareBtn">📤 Share</button>
-    <!-- ONLY this Favorites/top button exists -->
-    <button id="toggleFavBtn" class="secondary">📖 Favorites</button>
+  <div class="prompt-box" id="promptArea">
+    <p id="prompt" class="prompt">✨ Loading your calm…</p>
   </div>
 
-  <!-- Collapsible favorites panel -->
-  <div class="fav-panel" id="favPanel" aria-hidden="true">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <div style="display:flex;gap:8px;align-items:center;">
-        <strong>Favorites</strong>
-        <button id="saveCurrentBtn" class="secondary" style="padding:6px 10px;">⭐ Save current</button>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button id="clearFavBtn" class="secondary">Clear all</button>
-        <button id="closeFavBtn" class="secondary">Close</button>
-      </div>
+  <div class="controls" aria-hidden="false">
+    <button id="newBtn">🌸 New</button>
+    <button id="copyBtn">📋 Copy</button>
+    <button id="shareBtn">📤 Share</button>
+    <button id="favBtn">⭐ Favorite</button>
+    <button id="toggleFavBtn">📖 Favorites</button>
+  </div>
+
+  <div class="favorites-section" id="favoritesSection">
+    <h3>Your Favorites</h3>
+    <ul id="favList"></ul>
+    <div style="margin-top:10px;">
+      <button id="clearFavBtn">Clear all</button>
+      <button id="closeFavBtn">Close</button>
     </div>
-    <div class="fav-card" id="favList">No favorites yet.</div>
   </div>
 
   <h3>Breathe With Me</h3>
-  <div id="breatheCircle" class="breathe-circle" aria-hidden="true"></div>
-  <div style="margin:10px 0; display:flex; gap:8px; justify-content:center;">
-    <button id="startBtn">▶ Start</button>
-    <button id="stopBtn" class="secondary">■ Stop</button>
+  <div class="breathe-circle" id="breatheCircle" aria-hidden="true"></div>
+  <div class="controls">
+    <button id="startBreath">▶ Start</button>
+    <button id="stopBreath">■ Stop</button>
   </div>
 
   <div class="footer">HealingLensStudio | For the Quiet in You</div>
   <div id="toast" role="status" aria-live="polite"></div>
 
-<script>
-/* Minimal fallback library (only used if prompts.json missing) */
-const FALLBACK = {
-  prompts:{ mindfulness:["Pause and breathe."], movement:["Stretch gently."], kindness:["You are enough."], creativity:["Doodle for 2 minutes."] },
-  affirmations:{ mindfulness:["This moment is enough."], movement:["I honor my body."], kindness:["I am worthy of kindness."], creativity:["I create freely."] }
-};
+  <script>
+    let prompts = {};
+    let affirmations = {};
 
-let prompts = {}, affirmations = {};
-let favorites = JSON.parse(localStorage.getItem('favorites')||'[]');
-let breathAnim = null, toastTimer=null;
-
-function showToast(msg, ms=1400){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(()=> t.style.display='none', ms); }
-
-async function loadLibrary(){
-  try{
-    const res = await fetch('./prompts.json', { cache:'no-store' });
-    if(res.ok){
-      const lib = await res.json();
-      if(lib && (lib.prompts || lib.affirmations)){
-        prompts = lib.prompts || {};
-        affirmations = lib.affirmations || {};
-        console.log('prompts.json loaded');
-        newPrompt();
-        return;
+    async function loadLibrary() {
+      try {
+        const res = await fetch('./prompts.json', { cache: "no-store" });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const lib = await res.json();
+        if (lib && lib.prompts && lib.affirmations) {
+          prompts = lib.prompts;
+          affirmations = lib.affirmations;
+          newPrompt();
+          return;
+        }
+      } catch (e) {
+        showToast('Check prompts.json');
       }
     }
-  }catch(e){ console.warn('could not load prompts.json', e); }
-  prompts = FALLBACK.prompts; affirmations = FALLBACK.affirmations; newPrompt();
-}
 
-const lastByCat = {};
-function newPrompt(){
-  const cat = (document.getElementById('category')||{}).value || 'mindfulness';
-  const mode = (document.querySelector('input[name="mode"]:checked')||{}).value || 'prompt';
-  const set = (mode==='prompt'?prompts:affirmations)[cat] || [];
-  if(!set.length){ document.getElementById('prompt').innerText='No items available for this category.'; return; }
-  let idx; do { idx=Math.floor(Math.random()*set.length); } while(idx===lastByCat[cat] && set.length>1);
-  lastByCat[cat]=idx;
-  const txt = set[idx] + (mode==='prompt' ? "\n\n🌿 Breathe this in. Try writing one line in your journal." : "");
-  document.getElementById('prompt').innerText = txt;
-}
+    const lastPromptByCategory = {};
+    let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
 
-/* copy/share */
-async function copyPrompt(){ try{ await navigator.clipboard.writeText(document.getElementById('prompt').innerText); showToast('Copied'); }catch(e){ showToast('Copy failed'); } }
-async function sharePrompt(){ const t = document.getElementById('prompt').innerText.trim(); if(!t) return showToast('Nothing to share'); if(navigator.share){ try{ await navigator.share({ title:'HealingLensStudio Calm', text:t }); showToast('Shared'); return; }catch(e){} } try{ await navigator.clipboard.writeText(t); showToast('Copied (no share)'); }catch{ showToast('Share failed'); } }
+    function newPrompt() {
+      const category = document.getElementById("category").value;
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const set = (mode === "prompt" ? prompts : affirmations)[category];
 
-/* Favorites: single panel with Save current */
-function toggleFavPanel(){ const p=document.getElementById('favPanel'); if(!p) return; if(p.style.display==='block'){ p.style.display='none'; p.setAttribute('aria-hidden','true'); } else { renderFavorites(); p.style.display='block'; p.setAttribute('aria-hidden','false'); } }
-function saveCurrent(){ const t=document.getElementById('prompt').innerText; if(!t) return showToast('Nothing to save'); if(!favorites.includes(t)){ favorites.push(t); localStorage.setItem('favorites', JSON.stringify(favorites)); showToast('Saved'); renderFavorites(); } else showToast('Already saved'); }
-function renderFavorites(){ const el=document.getElementById('favList'); if(!favorites.length){ el.innerHTML='<div>No favorites yet.</div>'; return; } el.innerHTML = favorites.map((f,i)=>`<div class="fav-item"><div>${escapeHtml(f)}</div><div style="margin-top:6px;display:flex;gap:8px;"><button data-use="${i}" class="secondary">Use</button><button data-remove="${i}" class="secondary">Remove</button></div></div>`).join(''); el.querySelectorAll('[data-use]').forEach(b=>b.addEventListener('click',()=>{ const i=+b.dataset.use; document.getElementById('prompt').innerText = favorites[i]; showToast('Loaded'); })); el.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>{ const i=+b.dataset.remove; favorites.splice(i,1); localStorage.setItem('favorites', JSON.stringify(favorites)); renderFavorites(); showToast('Removed'); })); }
-function clearFavs(){ if(!favorites.length) return showToast('No favorites'); if(!confirm('Clear all favorites?')) return; favorites=[]; localStorage.setItem('favorites', JSON.stringify(favorites)); renderFavorites(); showToast('Cleared'); }
-function escapeHtml(s){ return String(s).replace(/[&<>"'`=\/]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#96;','=':'&#61;'}[c])); }
+      if (!set || !set.length) {
+        document.getElementById("prompt").innerText = "No items available.";
+        return;
+      }
 
-/* breathing animation (WAAPI with safe checks) */
-function startBreathing(){
-  const el = document.getElementById('breatheCircle');
-  if(!el) return;
-  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){ showToast('Reduced motion'); return; }
-  el.style.display='block'; el.style.opacity='1';
-  if(el.animate){
-    try{
-      if(breathAnim && breathAnim.cancel) breathAnim.cancel();
-      breathAnim = el.animate([{transform:'scale(1)', background:getComputedStyle(document.documentElement).getPropertyValue('--accent')||'#EED9D0'}, {transform:'scale(1.6)', background:getComputedStyle(document.documentElement).getPropertyValue('--accent2')||'#D5E0D5'}, {transform:'scale(1)', background:getComputedStyle(document.documentElement).getPropertyValue('--accent')||'#EED9D0'}], { duration:6000, iterations:Infinity, easing:'ease-in-out' });
-      showToast('🫁 Follow the circle to breathe');
-    }catch(e){ console.warn(e); el.style.display='none'; showToast('Breathing failed'); }
-  } else {
-    // fallback: simple CSS pulse via class (not implemented separately here)
-    el.style.display='block';
-    showToast('Breathing (fallback)'); // small fallback message
-  }
-}
-function stopBreathing(){ const el=document.getElementById('breatheCircle'); if(!el) return; try{ if(breathAnim && breathAnim.cancel) breathAnim.cancel(); }catch(e){} el.style.display='none'; showToast('Stopped'); }
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * set.length);
+      } while (randomIndex === lastPromptByCategory[category] && set.length > 1);
+      lastPromptByCategory[category] = randomIndex;
 
-/* wiring */
-window.addEventListener('load', ()=>{
-  document.getElementById('newBtn').addEventListener('click', newPrompt);
-  document.getElementById('copyBtn').addEventListener('click', copyPrompt);
-  document.getElementById('shareBtn').addEventListener('click', sharePrompt);
-  document.getElementById('toggleFavBtn').addEventListener('click', toggleFavPanel);
-  document.getElementById('saveCurrentBtn').addEventListener('click', saveCurrent);
-  document.getElementById('clearFavBtn').addEventListener('click', clearFavs);
-  document.getElementById('closeFavBtn').addEventListener('click', toggleFavPanel);
-  document.getElementById('startBtn').addEventListener('click', startBreathing);
-  document.getElementById('stopBtn').addEventListener('click', stopBreathing);
-  document.getElementById('category').addEventListener('change', newPrompt);
-  document.querySelectorAll('input[name="mode"]').forEach(r=> r.addEventListener('change', newPrompt));
-  loadLibrary();
-});
-</script>
+      const text = set[randomIndex];
+      document.getElementById("prompt").innerText =
+        text + (mode === "prompt" ? "\n\n🌿 Breathe this in. Try writing one line in your journal." : "");
+    }
+
+    async function copyPrompt() {
+      const text = document.getElementById("prompt").innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Copied!');
+      } catch {
+        showToast('Copy failed');
+      }
+    }
+
+    async function sharePrompt() {
+      const text = document.getElementById("prompt").innerText.trim();
+      if (!text) return showToast('Nothing to share');
+      if (navigator.share) {
+        await navigator.share({ title: 'HealingLensStudio Calm', text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        showToast('Copied to share');
+      }
+    }
+
+    function addFavorite() {
+      const text = document.getElementById("prompt").innerText;
+      if (!text) return;
+      if (!favorites.includes(text)) {
+        favorites.push(text);
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        showToast('⭐ Saved!');
+      } else {
+        showToast('Already saved');
+      }
+    }
+
+    function renderFavorites() {
+      const section = document.getElementById('favoritesSection');
+      const list = document.getElementById('favList');
+      if (!favorites.length) {
+        list.innerHTML = '<li>No favorites yet.</li>';
+      } else {
+        list.innerHTML = favorites.map((f,i)=>
+          `<li style="margin-bottom:8px;white-space:pre-wrap;">
+            ${f}<br>
+            <button onclick="useFavorite(${i})">Use</button>
+            <button onclick="removeFavorite(${i})">Remove</button>
+          </li>`).join('');
+      }
+    }
+
+    function useFavorite(i) {
+      document.getElementById('prompt').innerText = favorites[i];
+      showToast('Loaded favorite');
+    }
+
+    function removeFavorite(i) {
+      favorites.splice(i,1);
+      localStorage.setItem("favorites", JSON.stringify(favorites));
+      renderFavorites();
+    }
+
+    function clearFavorites() {
+      favorites = [];
+      localStorage.setItem("favorites", "[]");
+      renderFavorites();
+      showToast('Cleared');
+    }
+
+    // Breathing functions
+    let _breathAnim = null;
+    let _fallbackTimer = null;
+
+    function startBreathing() {
+      const el = document.getElementById('breatheCircle');
+      if (!el) return;
+
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        showToast('Reduced motion enabled');
+        return;
+      }
+
+      el.style.display = 'block';
+      el.style.opacity = '1';
+      el.style.zIndex = 9999;
+
+      if (_breathAnim && typeof _breathAnim.cancel === 'function') {
+        try { _breathAnim.cancel(); } catch(e){}
+        _breathAnim = null;
+      }
+      if (_fallbackTimer) { clearTimeout(_fallbackTimer); _fallbackTimer = null; }
+      el.classList.remove('breathe-visible-fallback');
+
+      if (Element.prototype.animate) {
+        try {
+          _breathAnim = el.animate([
+            { transform: 'scale(1)', background: '#EED9D0' },
+            { transform: 'scale(1.6)', background: '#D5E0D5' },
+            { transform: 'scale(1)', background: '#EED9D0' }
+          ], { duration: 6000, iterations: 4, easing: 'ease-in-out', fill: 'forwards' });
+
+          showToast('🫁 Breathe with the circle');
+          _breathAnim.onfinish = ()=> {
+            el.style.opacity = '0';
+            setTimeout(()=> el.style.display = 'none', 200);
+            _breathAnim = null;
+            showToast('Complete');
+          };
+          return;
+        } catch (err) {
+          console.warn('WAAPI error, fallback');
+        }
+      }
+
+      // fallback
+      el.classList.add('breathe-visible-fallback');
+      _fallbackTimer = setTimeout(()=>{
+        el.classList.remove('breathe-visible-fallback');
+        el.style.opacity = '0';
+        setTimeout(()=> el.style.display = 'none', 200);
+        _fallbackTimer = null;
+      }, 6000*4+100);
+    }
+
+    function stopBreathing() {
+      const el = document.getElementById('breatheCircle');
+      if (!el) return;
+      if (_breathAnim && typeof _breathAnim.cancel === 'function') {
+        try { _breathAnim.cancel(); } catch(e){}
+        _breathAnim = null;
+      }
+      if (_fallbackTimer) { clearTimeout(_fallbackTimer); _fallbackTimer = null; }
+      el.classList.remove('breathe-visible-fallback');
+      el.style.opacity = '0';
+      setTimeout(()=> el.style.display = 'none', 200);
+      showToast('Stopped');
+    }
+
+    // Toast
+    let toastTimer = null;
+    function showToast(msg, ms=1600) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=> t.style.display = 'none', ms);
+    }
+
+    // Event bindings
+    document.getElementById('newBtn').addEventListener('click', newPrompt);
+    document.getElementById('copyBtn').addEventListener('click', copyPrompt);
+    document.getElementById('shareBtn').addEventListener('click', sharePrompt);
+    document.getElementById('favBtn').addEventListener('click', addFavorite);
+    document.getElementById('toggleFavBtn').addEventListener('click', ()=>{
+      const section = document.getElementById('favoritesSection');
+      section.style.display = (section.style.display==='block')?'none':'block';
+      renderFavorites();
+    });
+    document.getElementById('clearFavBtn').addEventListener('click', clearFavorites);
+    document.getElementById('closeFavBtn').addEventListener('click', ()=>{
+      document.getElementById('favoritesSection').style.display='none';
+    });
+    document.getElementById('startBreath').addEventListener('click', startBreathing);
+    document.getElementById('stopBreath').addEventListener('click', stopBreathing);
+    document.getElementById('category').addEventListener('change', newPrompt);
+    document.querySelectorAll('input[name="mode"]').forEach(r=> r.addEventListener('change', newPrompt));
+
+    window.onload = ()=> loadLibrary();
+  </script>
 </body>
 </html>
