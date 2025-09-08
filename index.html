@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>HealingLensStudio Calm</title>
 
-  <!-- Manifest for PWA support -->
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -13,158 +12,83 @@
   <link rel="apple-touch-icon" href="logo.png">
 
   <style>
-    body {
-      margin: 0;
+    :root{
+      --bg-1:#f5f1ec; --bg-2:#e6f0ec; --text:#2E2E2E;
+      --card:#fff; --accent:#EED9D0; --accent-2:#D5E0D5; --muted:#6b6b6b;
+      --radius:14px;
+    }
+    html,body{height:100%;margin:0}
+    body{
       font-family: 'Libre Baskerville', serif;
-      background: linear-gradient(135deg, #f5f1ec, #e6f0ec, #fdfcfa);
-      color: #2E2E2E;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-      text-align: center;
+      background: linear-gradient(135deg,var(--bg-1),var(--bg-2),#fdfcfa);
+      color:var(--text);
+      display:flex; flex-direction:column; align-items:center;
+      padding:20px; text-align:center;
     }
+    .logo img{ width:120px; display:block; margin:12px auto; }
+    h1{ font-family:'Poppins',sans-serif; font-size:1.9rem; margin:8px 0 2px;}
+    h2{ font-family:'Libre Baskerville',serif; font-style:italic; color:var(--muted); margin:0 0 12px; }
+    .app-description{ max-width:720px; color:var(--muted); line-height:1.6; margin-bottom:8px; }
 
-    .logo img {
-      width: 120px;
-      margin: 15px auto;
-      display: block;
+    .controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center; margin:10px 0; }
+    label{ cursor:pointer; font-family:'Poppins',sans-serif; font-size:1.05rem; color:var(--text); }
+    select{ border-radius:12px; padding:10px 14px; font-size:1.02rem; min-width:160px; }
+
+    .prompt-box{
+      background:var(--card); border-radius:var(--radius); padding:20px;
+      box-shadow:0 10px 26px rgba(0,0,0,0.06); max-width:720px; width:100%;
+      text-align:left; white-space:pre-wrap; margin-bottom:14px;
     }
+    .prompt { font-size:1.25rem; line-height:1.8; margin:0; color:var(--text); }
 
-    h1 {
-      font-family: 'Poppins', sans-serif;
-      font-size: 1.8rem;
-      margin-bottom: 5px;
-    }
+    button{ background:var(--accent); border:none; border-radius:12px; padding:10px 16px;
+      font-family:'Poppins',sans-serif; font-size:1.02rem; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,0.04);}
+    button.secondary{ background:transparent; border:1px solid rgba(0,0,0,0.06); color:var(--text); }
+    button:active{ transform: translateY(1px); }
 
-    h2 {
-      font-family: 'Libre Baskerville', serif;
-      font-size: 1rem;
-      font-style: italic;
-      margin-bottom: 10px;
-    }
+    /* Favorites modal drawer */
+    .fav-modal{ position:fixed; inset:0; display:none; align-items:flex-end; justify-content:center; z-index:12000; }
+    .fav-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,0.35); }
+    .fav-drawer{ position:relative; width:100%; max-width:720px; background:var(--card); border-top-left-radius:14px; border-top-right-radius:14px; padding:16px; box-shadow:0 -20px 40px rgba(0,0,0,0.12); max-height:70vh; overflow:auto; }
 
-    .app-description {
-      font-family: 'Libre Baskerville', serif;
-      font-size: 1rem;
-      color: #444;
-      max-width: 500px;
-      margin: 10px auto 20px auto;
-      line-height: 1.6;
-    }
-
-    .prompt-box {
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px;
-      max-width: 500px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-      margin-bottom: 20px;
-      text-align: left;
-      white-space: pre-wrap;
-    }
-
-    .prompt {
-      font-size: 1.1rem;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    .controls {
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:center;
-      margin-bottom: 10px;
-    }
-
-    button, select {
-      min-height: 44px;
-      margin: 8px;
-      padding: 10px 18px;
-      border-radius: 12px;
-      border: none;
-      font-size: 1rem;
-      cursor: pointer;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    button {
-      background: #EED9D0;
-      color: #2E2E2E;
-      transition: background 0.3s;
-    }
-
-    button:hover, button:focus {
-      background: #D5E0D5;
-      outline: none;
-    }
-
-    .favorites {
-      margin-top: 20px;
-      max-width: 500px;
-      text-align: left;
-    }
-
-    .favorites ul { padding-left: 16px; }
-
+    /* breathing circle */
     .breathe-circle {
-      width: 100px; height: 100px;
-      margin: 20px auto;
-      border-radius: 50%;
-      background: #EED9D0;
-      display: none;
+      width:120px; height:120px; border-radius:50%; background:var(--accent);
+      margin:18px auto; display:none; opacity:0; transform-origin:center;
+      box-shadow:0 12px 30px rgba(0,0,0,0.06); z-index:10010;
     }
+    .breathe-circle.breathing { animation: breatheAnim 8s ease-in-out 4; animation-fill-mode:forwards; opacity:1; }
+    @keyframes breatheAnim { 0%{transform:scale(1);background:var(--accent)} 50%{transform:scale(1.6);background:var(--accent-2)} 100%{transform:scale(1);background:var(--accent)} }
 
-    .footer {
-      font-size: 0.8rem;
-      margin-top: 20px;
-      font-style: italic;
-    }
+    .footer{ font-size:0.9rem; color:var(--muted); margin-top:20px; font-style:italic; }
 
-    @media (max-width: 600px) {
-      h1 { font-size: 1.4rem; }
-      .prompt { font-size: 1rem; }
-      button, select { font-size: 0.9rem; padding: 10px; }
-    }
+    /* toast */
+    #toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:22px; background:rgba(0,0,0,0.8); color:#fff; padding:8px 12px; border-radius:8px; display:none; z-index:13000; font-size:0.95rem; }
 
-    /* simple toast */
-    #toast {
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 24px;
-      background: rgba(0,0,0,0.8);
-      color: white;
-      padding: 8px 12px;
-      border-radius: 8px;
-      display: none;
-      z-index: 9999;
-      font-size: 0.95rem;
+    /* walkthrough overlay */
+    .walk-overlay{ position:fixed; inset:0; display:none; z-index:12500; background:rgba(10,10,10,0.42); }
+    .walk-highlight{ position:absolute; border-radius:12px; box-shadow:0 20px 40px rgba(0,0,0,0.24); pointer-events:none; transition:all .28s; }
+    .walk-tooltip{ position:fixed; z-index:12510; background:var(--card); padding:12px; border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.18); max-width:86vw; left:50%; transform:translateX(-50%); }
+
+    @media (max-width:600px){
+      .prompt{ font-size:1.08rem; }
+      button{ min-width:42vw; }
+      select{ min-width:42vw; }
     }
   </style>
 </head>
 <body>
   <div class="logo" aria-hidden="true">
-    <picture>
-      <source srcset="logo.webp" type="image/webp">
-      <img src="logo.png" alt="HealingLensStudio Logo">
-    </picture>
+    <picture><source srcset="logo.webp" type="image/webp"><img src="logo.png" alt="HealingLensStudio logo"></picture>
   </div>
 
   <h1>HealingLensStudio Calm</h1>
   <h2>For the Quiet in You 🌿</h2>
-  <p class="app-description">
-    A gentle digital calm corner — with daily prompts, affirmations, and soft practices 
-    for your nervous system.<br>
-    Free. Always here. For the quiet in you.
-  </p>
+  <p class="app-description">A gentle digital calm corner — with daily prompts, affirmations, and soft practices for your nervous system. Free. Always here. For the quiet in you.</p>
 
   <div class="controls" role="group" aria-label="Mode and category">
     <label><input type="radio" name="mode" value="prompt" checked> Prompts</label>
     <label><input type="radio" name="mode" value="affirmation"> Affirmations</label>
-
     <select id="category" aria-label="Choose category">
       <option value="mindfulness">🌿 Mindfulness</option>
       <option value="movement">✨ Movement</option>
@@ -173,221 +97,303 @@
     </select>
   </div>
 
-  <div class="prompt-box" id="promptArea">
-    <p id="prompt" class="prompt">✨ Loading your calm…</p>
-  </div>
+  <div class="prompt-box" id="promptBox" aria-live="polite"><p id="prompt" class="prompt">✨ Loading your calm…</p></div>
 
   <div class="controls" aria-hidden="false">
     <button id="newBtn">🌸 New</button>
-    <button id="copyBtn">📋 Copy</button>
-    <button id="saveBtn">💾 Save</button>
-    <button id="favBtn">⭐ Favorite</button>
-    <button id="viewFavBtn">📖 View Favorites</button>
+    <button id="copyBtn" class="secondary">📋 Copy</button>
+    <button id="shareBtn">📤 Share</button>
+    <button id="favBtn" class="secondary">⭐ Favorite</button>
+    <button id="openFavBtn" class="secondary">📖 View</button>
   </div>
 
-  <div class="favorites" id="favorites"></div>
+  <!-- Favorites modal/drawer -->
+  <div class="fav-modal" id="favModal" aria-hidden="true">
+    <div class="fav-backdrop" id="favBackdrop"></div>
+    <div class="fav-drawer" role="dialog" aria-modal="true" aria-labelledby="favTitle">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 id="favTitle" style="margin:0;font-family:'Poppins',sans-serif;">Favorites</h3>
+        <button id="closeFav" class="secondary">Close</button>
+      </div>
+      <div id="favList" style="margin-top:12px;line-height:1.6;"></div>
+    </div>
+  </div>
 
   <h3>Breathe With Me</h3>
-  <div class="breathe-circle" id="breathe-circle" aria-hidden="true"></div>
-  <button id="startBreath">🫁 Start</button>
+  <div class="breathe-circle" id="breatheCircle" aria-hidden="true"></div>
+  <div style="margin:10px 0;"><button id="startBreath">▶ Start</button></div>
 
   <div class="footer">HealingLensStudio | For the Quiet in You</div>
 
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <!-- html2canvas for Save-as-image -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
+  <!-- small external lib optionally used for Save-as-image (not used here) -->
   <script>
-    // -- Data will be loaded from prompts.json
-    let prompts = {};
-    let affirmations = {};
+  /********************************************************
+   * Robust single-file app
+   * - loads ./prompts.json if available, else fallback
+   * - share, copy, favorites modal, walkthrough, breathing
+   ********************************************************/
 
-    async function loadLibrary() {
+  // fallback library (will be used if prompts.json fails)
+  const FALLBACK = {
+    prompts: {
+      mindfulness: [
+        "Pause. Place one hand on your chest. Feel one full breath enter and leave.",
+        "Notice one sound around you that feels calming. Stay with it for a moment.",
+        "Close your eyes and imagine your favorite place in nature.",
+        "Unclench your jaw. Drop your shoulders. Exhale slowly.",
+        "Sip water slowly — feel it as a reset ritual.",
+        "Look outside. Find something still and breathe with it.",
+        "Count your breaths up to five, then begin again.",
+        "Touch something near you and notice its texture.",
+        "Imagine your breath as waves. Let them wash in and out.",
+        "Whisper a kind word to yourself as you would to a friend."
+      ],
+      movement: [
+        "Stretch your arms overhead like you’re greeting the sun.",
+        "Roll your shoulders back three times.",
+        "Sway gently side to side like tall grass.",
+        "Rotate your wrists and ankles, thanking them.",
+        "Stand tall. Imagine a string lifting your head.",
+        "Shake your hands as if letting go of the day.",
+        "Stretch your spine tall, then fold forward gently.",
+        "Tap your feet on the floor rhythmically.",
+        "Stretch your side body with one arm overhead.",
+        "Circle your shoulders slowly like waves."
+      ],
+      kindness: [
+        "Whisper to yourself: 'I am doing enough.'",
+        "Forgive yourself for something small today.",
+        "Whisper your name with kindness.",
+        "Say softly: 'I am allowed to rest without guilt.'",
+        "Affirm: 'I am enough exactly as I am.'",
+        "Imagine hugging your younger self.",
+        "Whisper: 'I am safe to soften.'",
+        "Say: 'I belong here, exactly as I am.'",
+        "Affirm: 'Rest is medicine.'",
+        "Say: 'Love doesn’t have to be earned.'"
+      ],
+      creativity: [
+        "Write a one-line poem about the sky.",
+        "Sketch something near you without judgment.",
+        "Write: 'Today I want to remember…'",
+        "Imagine a safe place. Describe it.",
+        "Doodle for 2 minutes with no rules.",
+        "Write one sentence to your future self.",
+        "Draw a symbol of how you feel today.",
+        "Write: 'The story I am telling myself is…'",
+        "Sketch something that makes you smile.",
+        "Write a haiku about this moment."
+      ]
+    },
+    affirmations: {
+      mindfulness: ["I can return to my breath anytime.","This moment is enough.","I am present with what is.","I allow calm to return to my body."],
+      movement: ["My body deserves gentle movement.","I release tension step by step.","I honor what my body needs."],
+      kindness: ["I am worthy of love exactly as I am.","Softness is strength.","I speak kindly to myself."],
+      creativity: ["Expression is healing.","My ideas do not need to be perfect.","I make space for curiosity."]
+    }
+  };
+
+  // app state
+  let prompts = {}, affirmations = {};
+  let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+  const lastPromptByCategory = {};
+  let _breathAnim = null;
+  let toastTimer = null;
+
+  function showToast(msg, ms = 1500) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> t.style.display = 'none', ms);
+  }
+
+  // load remote prompts.json or fallback
+  async function loadLibrary() {
+    try {
+      const res = await fetch('./prompts.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const lib = await res.json();
+      prompts = lib.prompts || FALLBACK.prompts;
+      affirmations = lib.affirmations || FALLBACK.affirmations;
+      console.info('Loaded prompts.json');
+      showToast('Library loaded');
+    } catch (err) {
+      console.warn('prompts.json not loaded — using fallback', err);
+      prompts = FALLBACK.prompts;
+      affirmations = FALLBACK.affirmations;
+      showToast('Using built-in prompts');
+    } finally {
+      // show initial prompt
+      setTimeout(()=> newPrompt(), 120);
+    }
+  }
+
+  async function setPromptText(text) {
+    const box = document.getElementById('promptBox');
+    box.classList.add('fade-out');
+    await new Promise(r=>setTimeout(r, 260));
+    document.getElementById('prompt').innerText = text;
+    box.classList.remove('fade-out');
+  }
+
+  function newPrompt() {
+    const cat = (document.getElementById('category')||{}).value || 'mindfulness';
+    const mode = (document.querySelector('input[name="mode"]:checked') || {}).value || 'prompt';
+    const set = (mode === 'prompt' ? prompts : affirmations)[cat] || [];
+    if (!set.length) {
+      setPromptText('No items available for this category.');
+      return;
+    }
+    let i;
+    do { i = Math.floor(Math.random()*set.length); } while (i === lastPromptByCategory[cat] && set.length > 1);
+    lastPromptByCategory[cat] = i;
+    const text = set[i] + (mode === 'prompt' ? "\n\n🌿 Breathe this in. Try writing one line in your journal." : "");
+    setPromptText(text);
+  }
+
+  // copy
+  async function copyPrompt() {
+    try {
+      await navigator.clipboard.writeText(document.getElementById('prompt').innerText);
+      showToast('Prompt copied!');
+    } catch (e) {
+      // fallback
+      const ta = document.createElement('textarea'); ta.value = document.getElementById('prompt').innerText; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); showToast('Prompt copied!'); } catch { showToast('Copy failed'); }
+      ta.remove();
+    }
+  }
+
+  // share (native if available, otherwise copy)
+  async function sharePrompt() {
+    const text = document.getElementById('prompt').innerText.trim();
+    if (!text) return showToast('Nothing to share');
+    if (navigator.share) {
+      try { await navigator.share({ title:'HealingLensStudio Calm', text }); showToast('Shared'); return; } catch (e) { /* fall through */ }
+    }
+    try { await navigator.clipboard.writeText(text); showToast('Sharing not supported — copied'); } catch { showToast('Could not share'); }
+  }
+
+  // favorites modal
+  function escapeHtml(s) { return String(s).replace(/[&<>"'`=\/]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#96;','=':'&#61;'}[c])); }
+  function renderFavorites() {
+    const el = document.getElementById('favList');
+    if (!favorites.length) { el.innerHTML = '<p>No favorites yet.</p>'; return; }
+    el.innerHTML = favorites.map((f,i)=>`<div style="margin-bottom:12px;"><div style="white-space:pre-wrap;">${escapeHtml(f)}</div><div style="margin-top:8px"><button data-use="${i}">Use</button> <button data-remove="${i}" class="secondary">Remove</button></div></div>`).join('');
+    el.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click', ()=>{ const i=+b.dataset.remove; favorites.splice(i,1); localStorage.setItem('favorites', JSON.stringify(favorites)); renderFavorites(); showToast('Removed'); }));
+    el.querySelectorAll('[data-use]').forEach(b=>b.addEventListener('click', ()=>{ const i=+b.dataset.use; setPromptText(favorites[i]); closeFavModal(); showToast('Loaded favorite'); }));
+  }
+  function openFavModal(){ renderFavorites(); document.getElementById('favModal').style.display='flex'; document.getElementById('favModal').setAttribute('aria-hidden','false'); }
+  function closeFavModal(){ document.getElementById('favModal').style.display='none'; document.getElementById('favModal').setAttribute('aria-hidden','true'); }
+
+  function addFavorite() {
+    const t = document.getElementById('prompt').innerText; if (!t) return showToast('Nothing to save');
+    if (!favorites.includes(t)) { favorites.push(t); localStorage.setItem('favorites', JSON.stringify(favorites)); showToast('Saved to favorites'); } else showToast('Already saved');
+  }
+
+  // breathing: robust
+  function startBreathing() {
+    const circle = document.getElementById('breatheCircle');
+    if (!circle) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { showToast('Reduced motion'); return; }
+
+    circle.style.display = 'block';
+    circle.style.opacity = '1';
+    setTimeout(()=>{ try { circle.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(e){} }, 70);
+
+    if (window._hl_breathAnim) { try { window._hl_breathAnim.cancel(); } catch(e){} window._hl_breathAnim = null; }
+    circle.classList.remove('breathing');
+
+    const keyframes = [
+      { transform: 'scale(1)', background: getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#EED9D0' },
+      { transform: 'scale(1.6)', background: getComputedStyle(document.documentElement).getPropertyValue('--accent-2') || '#D5E0D5' },
+      { transform: 'scale(1)', background: getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#EED9D0' }
+    ];
+    const opts = { duration: 8000, iterations: 4, easing: 'ease-in-out', fill: 'forwards' };
+
+    if (Element.prototype.animate) {
       try {
-        // Use a relative path so it works on GitHub Pages subpath
-        const res = await fetch('./prompts.json', { cache: "no-store" });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const lib = await res.json();
-
-        if (lib && lib.prompts && lib.affirmations) {
-          prompts = lib.prompts;
-          affirmations = lib.affirmations;
-          console.log('Library loaded:', {prompts, affirmations});
-          // show initial prompt
-          newPrompt();
-          showToast('Library loaded');
-          return;
-        }
-      } catch (e) {
-        console.warn('Could not load prompts.json — check path or file', e);
-        showToast('Using built-in library (or none) — check console');
-      }
-    }
-
-    // -- UI state
-    const lastPromptByCategory = {};
-    let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-
-    function newPrompt() {
-      const category = document.getElementById("category").value;
-      const mode = document.querySelector('input[name="mode"]:checked').value;
-      const set = (mode === "prompt" ? prompts : affirmations)[category];
-
-      // If library failed to load, handle gracefully
-      if (!set || !set.length) {
-        document.getElementById("prompt").innerText = "No items available for this category. Please check prompts.json.";
+        window._hl_breathAnim = circle.animate(keyframes, opts);
+        circle.classList.add('breathing');
+        showToast('🫁 Follow the circle to breathe');
+        window._hl_breathAnim.onfinish = () => {
+          circle.classList.remove('breathing');
+          circle.style.opacity = '0';
+          setTimeout(()=> circle.style.display='none', 220);
+          window._hl_breathAnim = null;
+          showToast('Breathing complete');
+        };
         return;
-      }
-
-      let randomIndex;
-      do {
-        randomIndex = Math.floor(Math.random() * set.length);
-      } while (randomIndex === lastPromptByCategory[category] && set.length > 1);
-      lastPromptByCategory[category] = randomIndex;
-      const text = set[randomIndex];
-      document.getElementById("prompt").innerText = text + (mode === "prompt" ? "\n\n🌿 Breathe this in. Try writing one line in your journal." : "");
+      } catch (e) { console.warn('animate failed', e); }
     }
+    // CSS fallback
+    circle.classList.add('breathing');
+    showToast('🫁 Follow the circle to breathe');
+    setTimeout(()=> {
+      circle.classList.remove('breathing');
+      circle.style.opacity = '0';
+      setTimeout(()=> circle.style.display='none', 220);
+      showToast('Breathing complete');
+    }, opts.duration * opts.iterations + 50);
+  }
 
-    // Copy with feedback
-    async function copyPrompt() {
-      const text = document.getElementById("prompt").innerText;
-      try {
-        await navigator.clipboard.writeText(text);
-        showToast('Prompt copied!');
-      } catch (e) {
-        // fallback
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          document.execCommand('copy');
-          showToast('Prompt copied!');
-        } catch (err) {
-          showToast('Copy failed');
-        }
-        ta.remove();
-      }
+  // walkthrough (first time)
+  const walkSteps = [
+    { sel:'#newBtn', text:'Tap 🌸 New for a fresh prompt' },
+    { sel:'#shareBtn', text:'Tap 📤 Share to send a kind prompt' },
+    { sel:'#startBreath', text:'Tap ▶ Start to follow the breathing circle' }
+  ];
+  function startWalk(i=0){
+    const overlay = document.getElementById('walkOverlay') || createWalkElements();
+    const highlight = document.getElementById('walkHighlight');
+    const tip = document.getElementById('walkTooltip');
+    const step = walkSteps[i];
+    if (!step) { overlay.style.display='none'; localStorage.setItem('hl_walk_v1','1'); return; }
+    overlay.style.display='block';
+    const target = document.querySelector(step.sel);
+    if (!target) { tip.textContent = step.text; return; }
+    target.scrollIntoView({ behavior:'smooth', block:'center' });
+    setTimeout(()=> {
+      const r = target.getBoundingClientRect();
+      const pad = 12;
+      highlight.style.width = (r.width + pad*2) + 'px';
+      highlight.style.height = (r.height + pad*2) + 'px';
+      highlight.style.left = (window.scrollX + r.left - pad) + 'px';
+      highlight.style.top  = (window.scrollY + r.top - pad) + 'px';
+      tip.textContent = step.text;
+      // next/prev controls handled inline for simplicity
+      // show next step on overlay click
+      overlay.onclick = ()=> startWalk(i+1);
+    }, 380);
+  }
+
+  // bindings
+  window.addEventListener('load', ()=>{
+    try {
+      document.getElementById('newBtn').addEventListener('click', newPrompt);
+      document.getElementById('copyBtn').addEventListener('click', copyPrompt);
+      document.getElementById('shareBtn').addEventListener('click', sharePrompt);
+      document.getElementById('favBtn').addEventListener('click', addFavorite);
+      document.getElementById('openFavBtn').addEventListener('click', openFavModal);
+      document.getElementById('closeFav').addEventListener('click', closeFavModal);
+      document.getElementById('favBackdrop').addEventListener('click', closeFavModal);
+      document.getElementById('startBreath').addEventListener('click', startBreathing);
+      document.getElementById('category').addEventListener('change', newPrompt);
+      document.querySelectorAll('input[name="mode"]').forEach(r=> r.addEventListener('change', newPrompt));
+
+      loadLibrary();
+      if (!localStorage.getItem('hl_walk_v1')) setTimeout(()=> startWalk(0), 600);
+    } catch (e) {
+      console.error('init error', e);
     }
+  });
 
-    // Save as image using html2canvas
-    function savePrompt() {
-      const node = document.querySelector('.prompt-box');
-      if (!window.html2canvas) {
-        showToast('Save unavailable');
-        return;
-      }
-      showToast('Preparing image…');
-      html2canvas(node, { scale: 2 }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'healinglensstudio-prompt.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        showToast('Saved image');
-      }).catch(()=> showToast('Could not save image'));
-    }
-
-    // Favorites
-    function addFavorite() {
-      const text = document.getElementById("prompt").innerText;
-      if (!text) { showToast('Nothing to save'); return; }
-      if (!favorites.includes(text)) {
-        favorites.push(text);
-        localStorage.setItem("favorites", JSON.stringify(favorites));
-        showToast('⭐ Saved to favorites!');
-      } else {
-        showToast('Already in favorites');
-      }
-    }
-
-    function viewFavorites() {
-      const container = document.getElementById('favorites');
-      if (!favorites.length) {
-        container.innerHTML = '<h4>Your Favorites:</h4><ul><li>No favorites yet.</li></ul>';
-        return;
-      }
-      const list = favorites.map((f, idx) => `<li style="margin-bottom:8px;"><div style="white-space:pre-wrap;">${escapeHtml(f)}</div><small><button data-use="${idx}" style="margin-top:6px">Use</button> <button data-remove="${idx}">Remove</button></small></li>`).join('');
-      container.innerHTML = `<h4>Your Favorites:</h4><ul>${list}</ul>`;
-      // attach handlers
-      container.querySelectorAll('[data-remove]').forEach(btn => btn.addEventListener('click', (e) => {
-        const i = Number(btn.dataset.remove);
-        favorites.splice(i,1);
-        localStorage.setItem("favorites", JSON.stringify(favorites));
-        viewFavorites();
-        showToast('Removed favorite');
-      }));
-      container.querySelectorAll('[data-use]').forEach(btn => btn.addEventListener('click', (e) => {
-        const i = Number(btn.dataset.use);
-        document.getElementById('prompt').innerText = favorites[i];
-        showToast('Loaded favorite');
-      }));
-    }
-
-    function escapeHtml(text) {
-      return text.replace(/[&<>"'`=\/]/g, function (s) {
-        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#61;'}[s];
-      });
-    }
-
-    // Breathing
-    let breathAnim = null;
-    function startBreathing() {
-      const circle = document.getElementById("breathe-circle");
-      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        showToast('Reduced motion preference enabled');
-        return;
-      }
-      circle.style.display = 'block';
-      if (breathAnim) breathAnim.cancel();
-      breathAnim = circle.animate([
-        { transform: 'scale(1)', offset: 0 },
-        { transform: 'scale(1.5)', offset: 0.5 },
-        { transform: 'scale(1)', offset: 1 }
-      ], {
-        duration: 8000,
-        iterations: 4,
-        easing: 'ease-in-out'
-      });
-      showToast('🫁 Inhale as the circle grows, exhale as it shrinks.');
-      // when done, hide
-      breathAnim.onfinish = () => { circle.style.display = 'none'; breathAnim = null; };
-    }
-
-    // toast helper
-    let toastTimer = null;
-    function showToast(msg, ms = 1600) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.style.display = 'block';
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(()=> t.style.display = 'none', ms);
-    }
-
-    // Event bindings
-    document.getElementById('newBtn').addEventListener('click', newPrompt);
-    document.getElementById('copyBtn').addEventListener('click', copyPrompt);
-    document.getElementById('saveBtn').addEventListener('click', savePrompt);
-    document.getElementById('favBtn').addEventListener('click', addFavorite);
-    document.getElementById('viewFavBtn').addEventListener('click', viewFavorites);
-    document.getElementById('startBreath').addEventListener('click', startBreathing);
-    document.getElementById('category').addEventListener('change', newPrompt);
-    document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', newPrompt));
-
-    // keyboard shortcuts (n = new, f = favorite, c = copy)
-    document.addEventListener('keydown', (e) => {
-      if (e.target && ['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target.tagName)) return;
-      const k = e.key.toLowerCase();
-      if (k === 'n') newPrompt();
-      if (k === 'f') addFavorite();
-      if (k === 'c') copyPrompt();
-    });
-
-    // load library on start
-    window.onload = () => { loadLibrary(); };
-
-    // expose for console if needed
-    window.healingLens = { loadLibrary, newPrompt, addFavorite, viewFavorites };
+  // expose some helpers for debugging
+  window.healingLens = { newPrompt, loadLibrary, addFavorite, openFavModal, startBreathing };
   </script>
 </body>
 </html>
