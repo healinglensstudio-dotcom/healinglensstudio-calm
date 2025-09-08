@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>HealingLensStudio Calm</title>
-
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -46,26 +45,29 @@
     button.secondary{ background:transparent; border:1px solid rgba(0,0,0,0.06); color:var(--text); }
     button:active{ transform: translateY(1px); }
 
-    /* Favorites modal drawer */
+    /* Favorites modal/drawer */
     .fav-modal{ position:fixed; inset:0; display:none; align-items:flex-end; justify-content:center; z-index:12000; }
     .fav-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,0.35); }
     .fav-drawer{ position:relative; width:100%; max-width:720px; background:var(--card); border-top-left-radius:14px; border-top-right-radius:14px; padding:16px; box-shadow:0 -20px 40px rgba(0,0,0,0.12); max-height:70vh; overflow:auto; }
 
-    /* breathing circle */
+    /* breathing circle (simple) */
     .breathe-circle {
       width:120px; height:120px; border-radius:50%; background:var(--accent);
       margin:18px auto; display:none; opacity:0; transform-origin:center;
       box-shadow:0 12px 30px rgba(0,0,0,0.06); z-index:10010;
     }
-    .breathe-circle.breathing { animation: breatheAnim 8s ease-in-out 4; animation-fill-mode:forwards; opacity:1; }
-    @keyframes breatheAnim { 0%{transform:scale(1);background:var(--accent)} 50%{transform:scale(1.6);background:var(--accent-2)} 100%{transform:scale(1);background:var(--accent)} }
+    @keyframes breatheSimple {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.6); }
+      100% { transform: scale(1); }
+    }
+    .breathing-simple { animation: breatheSimple 6000ms ease-in-out 4 forwards; opacity:1 !important; }
 
     .footer{ font-size:0.9rem; color:var(--muted); margin-top:20px; font-style:italic; }
 
-    /* toast */
     #toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:22px; background:rgba(0,0,0,0.8); color:#fff; padding:8px 12px; border-radius:8px; display:none; z-index:13000; font-size:0.95rem; }
 
-    /* walkthrough overlay */
+    /* walkthrough overlay (minimal) */
     .walk-overlay{ position:fixed; inset:0; display:none; z-index:12500; background:rgba(10,10,10,0.42); }
     .walk-highlight{ position:absolute; border-radius:12px; box-shadow:0 20px 40px rgba(0,0,0,0.24); pointer-events:none; transition:all .28s; }
     .walk-tooltip{ position:fixed; z-index:12510; background:var(--card); padding:12px; border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.18); max-width:86vw; left:50%; transform:translateX(-50%); }
@@ -120,89 +122,295 @@
   </div>
 
   <h3>Breathe With Me</h3>
-  <div class="breathe-circle" id="breatheCircle" aria-hidden="true"></div>
+  <div class="breathe-circle" id="breathe-circle" aria-hidden="true"></div>
   <div style="margin:10px 0;"><button id="startBreath">▶ Start</button></div>
 
   <div class="footer">HealingLensStudio | For the Quiet in You</div>
 
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <!-- small external lib optionally used for Save-as-image (not used here) -->
   <script>
-  /********************************************************
-   * Robust single-file app
-   * - loads ./prompts.json if available, else fallback
-   * - share, copy, favorites modal, walkthrough, breathing
-   ********************************************************/
+  /*****************************************************************
+   * Single-file updated index.html
+   * - inline library: 30 prompts + 30 affirmations per category
+   * - will attempt to fetch ./prompts.json and override inline when present
+   * - simple breathing circle animation restored (breathing-simple)
+   * - share, copy, favorites modal, walkthrough
+   *****************************************************************/
 
-  // fallback library (will be used if prompts.json fails)
-  const FALLBACK = {
+  // --- INLINE library (30 each) - you can remove if you use prompts.json
+  const INLINE_LIB = {
     prompts: {
       mindfulness: [
         "Pause. Place one hand on your chest. Feel one full breath enter and leave.",
-        "Notice one sound around you that feels calming. Stay with it for a moment.",
-        "Close your eyes and imagine your favorite place in nature.",
-        "Unclench your jaw. Drop your shoulders. Exhale slowly.",
+        "Notice one sound around you that feels calming. Stay with it for one minute.",
+        "Close your eyes and imagine your favorite place in nature for 30 seconds.",
+        "Unclench your jaw. Drop your shoulders. Exhale slowly three times.",
         "Sip water slowly — feel it as a reset ritual.",
         "Look outside. Find something still and breathe with it.",
-        "Count your breaths up to five, then begin again.",
-        "Touch something near you and notice its texture.",
+        "Count your breaths up to ten, gently returning if your mind wanders.",
+        "Touch something near you and notice its texture and temperature.",
         "Imagine your breath as waves. Let them wash in and out.",
-        "Whisper a kind word to yourself as you would to a friend."
+        "Whisper a kind word to yourself as you would to a friend.",
+        "Rest your feet on the ground and notice the contact.",
+        "Name three things you can see right now, slowly.",
+        "Bring attention to your posture — soften any tight places.",
+        "Follow your breath just at the tip of the nose for one minute.",
+        "Notice the rise and fall of your chest without changing it.",
+        "Scan from toes to head and notice any tightness, without judgement.",
+        "Observe a single color in the room and trace it with your eyes.",
+        "Place palms together and slowly rub them — feel the warmth.",
+        "Sit quietly for one minute and notice how the body feels.",
+        "Breathe slowly for five counts in, five counts out.",
+        "Notice a smell and follow where it goes in your nose.",
+        "Allow one long sigh out and feel what softens.",
+        "Name one small pleasure you’ve experienced today.",
+        "Watch the space between breaths for three cycles.",
+        "Notice how your shoulders feel — invite them to soften.",
+        "Gaze at the sky (or ceiling) and breathe with the expansiveness.",
+        "Hold your wrist gently and feel your pulse for a moment.",
+        "Notice thoughts as clouds — let them pass without holding.",
+        "Place attention on the heartbeat for 20 seconds.",
+        "Breathe with compassion toward your body for one minute."
       ],
       movement: [
         "Stretch your arms overhead like you’re greeting the sun.",
-        "Roll your shoulders back three times.",
-        "Sway gently side to side like tall grass.",
-        "Rotate your wrists and ankles, thanking them.",
-        "Stand tall. Imagine a string lifting your head.",
-        "Shake your hands as if letting go of the day.",
-        "Stretch your spine tall, then fold forward gently.",
-        "Tap your feet on the floor rhythmically.",
-        "Stretch your side body with one arm overhead.",
-        "Circle your shoulders slowly like waves."
+        "Roll your shoulders back three times with intention.",
+        "Sway gently side to side like tall grass in the breeze.",
+        "Rotate your wrists and ankles, noticing tension release.",
+        "Stand tall, imagine a string lifting your head, breathe softly.",
+        "Shake your hands gently as if letting go of the day.",
+        "Stretch your spine tall, then fold forward slowly.",
+        "Tap your feet on the floor to feel connected to the earth.",
+        "Stretch your side body with one arm overhead and breathe.",
+        "Circle your shoulders slowly like waves.",
+        "Take five slow steps, noticing each footfall.",
+        "Roll your chin toward your chest and then back, gently.",
+        "Reach one arm across the body for a shoulder stretch.",
+        "Lift your heels and then press them down — repeat slowly.",
+        "Clasp hands behind your back and open the chest gently.",
+        "Move your torso in a slow figure-eight motion.",
+        "Stand and stretch to the right, then to the left, breathing between.",
+        "Do a gentle neck sweep from left to right and back.",
+        "Place hands on hips and rotate the pelvis in slow circles.",
+        "Lift arms and make a small arc overhead to open the lungs.",
+        "Sit tall and do a seated twist to each side slowly.",
+        "Extend one leg and flex the ankle slowly several times.",
+        "Gently shrug the shoulders up and down three times.",
+        "Slowly reach down to touch toes (or shins) and breathe.",
+        "Make small circles with your shoulders while breathing deeply.",
+        "Stand and take a few gentle lunges to bring circulation.",
+        "Take a moment to consciously soften the jaw and throat.",
+        "Open and close your hands slowly like taking a wave in.",
+        "Place palms on belly and breathe with the belly for six breaths.",
+        "Slowly mime drawing a big circle with your torso."
       ],
       kindness: [
         "Whisper to yourself: 'I am doing enough.'",
-        "Forgive yourself for something small today.",
-        "Whisper your name with kindness.",
+        "Forgive yourself for something small today and release it.",
+        "Whisper your name with kindness and a soft breath.",
         "Say softly: 'I am allowed to rest without guilt.'",
         "Affirm: 'I am enough exactly as I am.'",
-        "Imagine hugging your younger self.",
+        "Imagine hugging your younger self for a moment.",
         "Whisper: 'I am safe to soften.'",
         "Say: 'I belong here, exactly as I am.'",
         "Affirm: 'Rest is medicine.'",
-        "Say: 'Love doesn’t have to be earned.'"
+        "Say: 'Love doesn’t have to be earned.'",
+        "Offer yourself permission to pause for five minutes.",
+        "Send one kind thought to someone who helped you today.",
+        "Write one small note of thanks to yourself mentally.",
+        "Name one thing you did well this week, quietly celebrate it.",
+        "Allow yourself to be imperfect for one minute.",
+        "Breathe in compassion, breathe out judgement.",
+        "Remind yourself: 'I can try again tomorrow.'",
+        "Place a hand over your heart and soften the words: 'I care for you.'",
+        "Affirm: 'It’s okay to say no when I need rest.'",
+        "Offer yourself patience with the same tone you’d use with a friend.",
+        "Notice a harsh self-judgement and reframe it kindly.",
+        "Tell yourself: 'I am learning, that is enough.'",
+        "Allow a small treat or rest without explanation.",
+        "Imagine sharing warmth with yourself like a blanket.",
+        "Repeat: 'I will be gentle with myself today.'",
+        "Validate a feeling you’re having without changing it.",
+        "Send a small smile toward your reflection in the mirror.",
+        "Say: 'I am permitted to make space for what I need.'",
+        "Receive kindness silently for one minute.",
+        "Affirm: 'My feelings matter; so do my needs.'"
       ],
       creativity: [
-        "Write a one-line poem about the sky.",
-        "Sketch something near you without judgment.",
-        "Write: 'Today I want to remember…'",
-        "Imagine a safe place. Describe it.",
-        "Doodle for 2 minutes with no rules.",
-        "Write one sentence to your future self.",
-        "Draw a symbol of how you feel today.",
-        "Write: 'The story I am telling myself is…'",
-        "Sketch something that makes you smile.",
-        "Write a haiku about this moment."
+        "Write a one-line poem about the sky right now.",
+        "Sketch something near you without judging the result.",
+        "Write: 'Today I want to remember…' and add one word.",
+        "Imagine a safe place and describe three small details of it.",
+        "Doodle for two minutes with no rules and no outcome.",
+        "Write one sentence to your future self in five years.",
+        "Draw a simple symbol of how you feel right now.",
+        "Write: 'The story I am telling myself is…' and notice it.",
+        "Sketch something that makes you smile in 60 seconds.",
+        "Write a tiny haiku about this moment (3 lines).",
+        "Make a list of three small creative things you can do today.",
+        "Name one color that represents your mood and paint it in your mind.",
+        "Tell a short one-sentence story that begins 'Once a quiet...' ",
+        "Fold a small paper shape and notice the rhythm of your hands.",
+        "Write down the first image that comes to mind and expand it by one sentence.",
+        "Choose a single object and describe it with five sensory words.",
+        "Draw a quick map of your inner landscape — no rules.",
+        "Write an invitation to your creativity: 'I will play for five minutes.'",
+        "Imagine a new ending to a familiar story you know.",
+        "Make a small collage from mental images — combine two things.",
+        "Write a question for your imagination and sit with it for a moment.",
+        "Playfully rename an everyday object with a creative name.",
+        "Set a timer for 3 minutes and free-write without stopping.",
+        "Create a tiny ritual of making tea and notice patterns.",
+        "Sketch a shape with your non-dominant hand and observe feelings.",
+        "Write a short letter to an idea you’ve been resisting.",
+        "Invent a symbolic object that would comfort you and describe it.",
+        "List three 'what if' prompts to spark a new idea.",
+        "Take a photograph of a small quiet scene and notice composition.",
+        "Say aloud one new possible beginning for something you want to try."
       ]
     },
     affirmations: {
-      mindfulness: ["I can return to my breath anytime.","This moment is enough.","I am present with what is.","I allow calm to return to my body."],
-      movement: ["My body deserves gentle movement.","I release tension step by step.","I honor what my body needs."],
-      kindness: ["I am worthy of love exactly as I am.","Softness is strength.","I speak kindly to myself."],
-      creativity: ["Expression is healing.","My ideas do not need to be perfect.","I make space for curiosity."]
+      mindfulness: [
+        "I can return to my breath anytime.",
+        "This moment is enough.",
+        "I am present with what is.",
+        "I allow calm to return to my body.",
+        "I notice and release what no longer serves me.",
+        "I meet this moment with curiosity.",
+        "I breathe in peace, breathe out tension.",
+        "I am grounded in my body and my breath.",
+        "I allow stillness to be a refuge.",
+        "I give myself permission to be here now.",
+        "My attention is a gift I can choose to give.",
+        "I gently return to the present.",
+        "I am learning to befriend my thoughts.",
+        "I can observe without being consumed.",
+        "Each breath brings me back to myself.",
+        "I soften into what is possible now.",
+        "I am allowed to be exactly as I am.",
+        "I make space for quiet in my day.",
+        "I release the need to control every moment.",
+        "I welcome the small breath of ease.",
+        "I am patient with my practice and myself.",
+        "I notice the little things that make me whole.",
+        "I slow down and find clarity.",
+        "I am kind to my wandering mind.",
+        "I accept each moment without pressure.",
+        "I breathe in openness, breathe out tension.",
+        "I give myself permission to rest quietly.",
+        "I anchor to my breath when I feel rushed.",
+        "I return gently whenever I drift away.",
+        "Stillness is a place I can visit."
+      ],
+      movement: [
+        "My body deserves gentle movement every day.",
+        "I move to listen to my body's wisdom.",
+        "Each stretch helps me release what I no longer need.",
+        "Movement is an act of kindness toward my body.",
+        "I welcome gentle motion as a form of care.",
+        "I honor my body's rhythm and limits.",
+        "Small movements bring me back to myself.",
+        "I let breath guide the quality of my motion.",
+        "I celebrate what my body can do today.",
+        "I let go of tension with conscious movement.",
+        "I meet my body with curiosity and gratitude.",
+        "Movement is nourishment for my nervous system.",
+        "I move slowly and with intention.",
+        "My body is my home, and I treat it kindly.",
+        "I allow rest as part of movement practice.",
+        "Each motion reminds me I am alive and present.",
+        "I greet my body with compassion.",
+        "I honor my need to slow down.",
+        "I listen to gentle signals my body offers.",
+        "Movement supports my clarity of mind.",
+        "I practice ease and patience with each motion.",
+        "I release tightness through breath and motion.",
+        "I choose small actions that support my wellbeing.",
+        "My movements are respectful of my energy today.",
+        "I move in ways that feel nourishing.",
+        "I provide space for my body to soften.",
+        "I offer myself permission to move without judgement.",
+        "I breathe into the places that feel closed.",
+        "Gentle motion brings calm into my system.",
+        "I am allowed to move in ways that honor me."
+      ],
+      kindness: [
+        "I am worthy of love exactly as I am.",
+        "Softness is strength.",
+        "I speak kindly to myself.",
+        "I welcome rest as a form of healing.",
+        "I deserve care and gentleness.",
+        "I forgive the small mistakes I make.",
+        "I am patient with my own growth.",
+        "I treat myself with gentle respect.",
+        "My worth is not dependent on productivity.",
+        "I accept my feelings without judgement.",
+        "I allow myself to receive good things.",
+        "I create space for compassion every day.",
+        "I offer myself the same kindness I give others.",
+        "I honor my limits and protect my energy.",
+        "I give myself time to recover and recharge.",
+        "I am learning, and progress is not perfect.",
+        "I am a priority; my wellbeing matters.",
+        "I choose to be soft with myself today.",
+        "I celebrate small steps as real progress.",
+        "I am allowed to pause and breathe.",
+        "I am deserving of gentle care and rest.",
+        "I am enough in this exact moment.",
+        "I let go of comparisons with others.",
+        "I notice the good in myself and hold it tenderly.",
+        "I am patient when I don’t have all the answers.",
+        "I accept comfort in times of need.",
+        "I give myself permission to feel and heal.",
+        "I listen to my needs with kindness.",
+        "I release harshness and invite gentleness in.",
+        "I believe in my capacity to be kind to myself."
+      ],
+      creativity: [
+        "Expression is healing.",
+        "My ideas do not need to be perfect.",
+        "I make space for curiosity every day.",
+        "Creating is a practice, not a performance.",
+        "I allow playful exploration without judgement.",
+        "Small steps of creativity are meaningful.",
+        "I welcome inspiration in quiet moments.",
+        "I give myself permission to try and fail.",
+        "My imagination is a resource I can return to.",
+        "I honor the process over the outcome.",
+        "I open to possibility one idea at a time.",
+        "I trust my voice and the images I make.",
+        "I play with ideas without pressure to finish.",
+        "I reclaim time for making just for joy.",
+        "I release the need for certainty in creation.",
+        "I allow ideas to evolve without force.",
+        "I value curiosity as a creative practice.",
+        "I notice small sparks of inspiration and follow them.",
+        "I create with kindness toward myself.",
+        "My ideas deserve a gentle place to begin.",
+        "I give myself permission to experiment freely.",
+        "I make room for imperfect beginnings.",
+        "I trust the rhythm of my creative process.",
+        "My creativity grows when I show up often.",
+        "I lovingly nurture the seeds of my ideas.",
+        "I allow wonder to guide my making.",
+        "I celebrate small creative acts today.",
+        "I listen to my imagination with care.",
+        "I release pressure and invite flow.",
+        "I am allowed to create simply because I want to."
+      ]
     }
   };
 
-  // app state
-  let prompts = {}, affirmations = {};
+  // --- App state & fallback
+  let prompts = INLINE_LIB.prompts;
+  let affirmations = INLINE_LIB.affirmations;
   let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
   const lastPromptByCategory = {};
-  let _breathAnim = null;
-  let toastTimer = null;
 
-  function showToast(msg, ms = 1500) {
+  // --- Toast helper
+  let toastTimer = null;
+  function showToast(msg, ms=1500) {
     const t = document.getElementById('toast');
     if (!t) return;
     t.textContent = msg;
@@ -211,189 +419,172 @@
     toastTimer = setTimeout(()=> t.style.display = 'none', ms);
   }
 
-  // load remote prompts.json or fallback
-  async function loadLibrary() {
+  // --- Try to load external prompts.json (optional) and override inline
+  async function tryLoadExternal() {
     try {
       const res = await fetch('./prompts.json', { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const lib = await res.json();
-      prompts = lib.prompts || FALLBACK.prompts;
-      affirmations = lib.affirmations || FALLBACK.affirmations;
-      console.info('Loaded prompts.json');
-      showToast('Library loaded');
-    } catch (err) {
-      console.warn('prompts.json not loaded — using fallback', err);
-      prompts = FALLBACK.prompts;
-      affirmations = FALLBACK.affirmations;
-      showToast('Using built-in prompts');
+      if (lib && (lib.prompts || lib.affirmations)) {
+        prompts = lib.prompts || prompts;
+        affirmations = lib.affirmations || affirmations;
+        console.info('Loaded external prompts.json');
+        showToast('Loaded prompts.json');
+      }
+    } catch (e) {
+      console.info('No external prompts.json (using inline library).');
     } finally {
-      // show initial prompt
-      setTimeout(()=> newPrompt(), 120);
+      newPrompt();
     }
   }
 
+  // --- Set prompt text with a small fade
   async function setPromptText(text) {
     const box = document.getElementById('promptBox');
     box.classList.add('fade-out');
-    await new Promise(r=>setTimeout(r, 260));
+    await new Promise(r=>setTimeout(r,260));
     document.getElementById('prompt').innerText = text;
     box.classList.remove('fade-out');
   }
 
+  // --- newPrompt logic
   function newPrompt() {
     const cat = (document.getElementById('category')||{}).value || 'mindfulness';
     const mode = (document.querySelector('input[name="mode"]:checked') || {}).value || 'prompt';
     const set = (mode === 'prompt' ? prompts : affirmations)[cat] || [];
-    if (!set.length) {
+    if (!set || !set.length) {
       setPromptText('No items available for this category.');
       return;
     }
-    let i;
-    do { i = Math.floor(Math.random()*set.length); } while (i === lastPromptByCategory[cat] && set.length > 1);
-    lastPromptByCategory[cat] = i;
-    const text = set[i] + (mode === 'prompt' ? "\n\n🌿 Breathe this in. Try writing one line in your journal." : "");
+    let idx;
+    do { idx = Math.floor(Math.random()*set.length); } while (idx === lastPromptByCategory[cat] && set.length > 1);
+    lastPromptByCategory[cat] = idx;
+    const text = set[idx] + (mode === 'prompt' ? "\n\n🌿 Breathe this in. Try writing one line in your journal." : "");
     setPromptText(text);
   }
 
-  // copy
+  // --- copy prompt
   async function copyPrompt() {
-    try {
-      await navigator.clipboard.writeText(document.getElementById('prompt').innerText);
-      showToast('Prompt copied!');
-    } catch (e) {
+    const text = document.getElementById('prompt').innerText;
+    try { await navigator.clipboard.writeText(text); showToast('Copied'); }
+    catch (e) {
       // fallback
-      const ta = document.createElement('textarea'); ta.value = document.getElementById('prompt').innerText; document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); showToast('Prompt copied!'); } catch { showToast('Copy failed'); }
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); showToast('Copied'); } catch { showToast('Copy failed'); }
       ta.remove();
     }
   }
 
-  // share (native if available, otherwise copy)
+  // --- share prompt
   async function sharePrompt() {
     const text = document.getElementById('prompt').innerText.trim();
     if (!text) return showToast('Nothing to share');
     if (navigator.share) {
-      try { await navigator.share({ title:'HealingLensStudio Calm', text }); showToast('Shared'); return; } catch (e) { /* fall through */ }
+      try { await navigator.share({ title:'HealingLensStudio Calm', text }); showToast('Shared'); return; } catch (e) { /* continue */ }
     }
     try { await navigator.clipboard.writeText(text); showToast('Sharing not supported — copied'); } catch { showToast('Could not share'); }
   }
 
-  // favorites modal
-  function escapeHtml(s) { return String(s).replace(/[&<>"'`=\/]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#96;','=':'&#61;'}[c])); }
-  function renderFavorites() {
+  // --- favorites modal functions
+  function escapeHtml(s) { return String(s).replace(/[&<>"'`=\/]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;",'/':'&#x2F;','`':'&#96;','=':'&#61;'}[c])); }
+  function renderFavorites(){
     const el = document.getElementById('favList');
     if (!favorites.length) { el.innerHTML = '<p>No favorites yet.</p>'; return; }
     el.innerHTML = favorites.map((f,i)=>`<div style="margin-bottom:12px;"><div style="white-space:pre-wrap;">${escapeHtml(f)}</div><div style="margin-top:8px"><button data-use="${i}">Use</button> <button data-remove="${i}" class="secondary">Remove</button></div></div>`).join('');
     el.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click', ()=>{ const i=+b.dataset.remove; favorites.splice(i,1); localStorage.setItem('favorites', JSON.stringify(favorites)); renderFavorites(); showToast('Removed'); }));
-    el.querySelectorAll('[data-use]').forEach(b=>b.addEventListener('click', ()=>{ const i=+b.dataset.use; setPromptText(favorites[i]); closeFavModal(); showToast('Loaded favorite'); }));
+    el.querySelectorAll('[data-use]').forEach(b=>b.addEventListener('click', ()=>{ const i=+b.dataset.use; setPromptText(favorites[i]); closeFav(); showToast('Loaded favorite'); }));
   }
-  function openFavModal(){ renderFavorites(); document.getElementById('favModal').style.display='flex'; document.getElementById('favModal').setAttribute('aria-hidden','false'); }
-  function closeFavModal(){ document.getElementById('favModal').style.display='none'; document.getElementById('favModal').setAttribute('aria-hidden','true'); }
+  function openFav(){ renderFavorites(); document.getElementById('favModal').style.display='flex'; document.getElementById('favModal').setAttribute('aria-hidden','false'); }
+  function closeFav(){ document.getElementById('favModal').style.display='none'; document.getElementById('favModal').setAttribute('aria-hidden','true'); }
+  function addFavorite(){ const t = document.getElementById('prompt').innerText; if (!t) return showToast('Nothing to save'); if (!favorites.includes(t)){ favorites.push(t); localStorage.setItem('favorites', JSON.stringify(favorites)); showToast('Saved'); } else showToast('Already saved'); }
 
-  function addFavorite() {
-    const t = document.getElementById('prompt').innerText; if (!t) return showToast('Nothing to save');
-    if (!favorites.includes(t)) { favorites.push(t); localStorage.setItem('favorites', JSON.stringify(favorites)); showToast('Saved to favorites'); } else showToast('Already saved');
-  }
-
-  // breathing: robust
+  // --- simple breathing circle (exact-like original)
+  let _breathTimeout = null;
   function startBreathing() {
-    const circle = document.getElementById('breatheCircle');
+    const circle = document.getElementById('breathe-circle');
     if (!circle) return;
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { showToast('Reduced motion'); return; }
 
+    // reset
     circle.style.display = 'block';
     circle.style.opacity = '1';
-    setTimeout(()=>{ try { circle.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(e){} }, 70);
+    circle.classList.remove('breathing-simple');
+    if (_breathTimeout) { clearTimeout(_breathTimeout); _breathTimeout = null; }
 
-    if (window._hl_breathAnim) { try { window._hl_breathAnim.cancel(); } catch(e){} window._hl_breathAnim = null; }
-    circle.classList.remove('breathing');
+    // force reflow to restart animation
+    void circle.offsetWidth;
+    circle.classList.add('breathing-simple');
 
-    const keyframes = [
-      { transform: 'scale(1)', background: getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#EED9D0' },
-      { transform: 'scale(1.6)', background: getComputedStyle(document.documentElement).getPropertyValue('--accent-2') || '#D5E0D5' },
-      { transform: 'scale(1)', background: getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#EED9D0' }
-    ];
-    const opts = { duration: 8000, iterations: 4, easing: 'ease-in-out', fill: 'forwards' };
-
-    if (Element.prototype.animate) {
-      try {
-        window._hl_breathAnim = circle.animate(keyframes, opts);
-        circle.classList.add('breathing');
-        showToast('🫁 Follow the circle to breathe');
-        window._hl_breathAnim.onfinish = () => {
-          circle.classList.remove('breathing');
-          circle.style.opacity = '0';
-          setTimeout(()=> circle.style.display='none', 220);
-          window._hl_breathAnim = null;
-          showToast('Breathing complete');
-        };
-        return;
-      } catch (e) { console.warn('animate failed', e); }
-    }
-    // CSS fallback
-    circle.classList.add('breathing');
     showToast('🫁 Follow the circle to breathe');
-    setTimeout(()=> {
-      circle.classList.remove('breathing');
+
+    // duration per cycle = 6000ms (as in CSS) -> 4 cycles -> 24000ms
+    _breathTimeout = setTimeout(() => {
+      circle.classList.remove('breathing-simple');
       circle.style.opacity = '0';
-      setTimeout(()=> circle.style.display='none', 220);
+      setTimeout(()=>{ circle.style.display = 'none'; }, 200);
       showToast('Breathing complete');
-    }, opts.duration * opts.iterations + 50);
+      _breathTimeout = null;
+    }, 6000 * 4 + 60);
   }
 
-  // walkthrough (first time)
-  const walkSteps = [
-    { sel:'#newBtn', text:'Tap 🌸 New for a fresh prompt' },
-    { sel:'#shareBtn', text:'Tap 📤 Share to send a kind prompt' },
-    { sel:'#startBreath', text:'Tap ▶ Start to follow the breathing circle' }
+  // --- walkthrough (first time)
+  const steps = [
+    { sel:'#newBtn', text:'Tap 🌸 New for a fresh prompt.' },
+    { sel:'#shareBtn', text:'Tap 📤 Share to send this prompt.' },
+    { sel:'#startBreath', text:'Tap ▶ Start to follow the breathing circle.' }
   ];
-  function startWalk(i=0){
-    const overlay = document.getElementById('walkOverlay') || createWalkElements();
-    const highlight = document.getElementById('walkHighlight');
-    const tip = document.getElementById('walkTooltip');
-    const step = walkSteps[i];
-    if (!step) { overlay.style.display='none'; localStorage.setItem('hl_walk_v1','1'); return; }
+  function startWalk(idx=0){
+    if (localStorage.getItem('hl_walk_v1')) return;
+    const overlay = createWalkElements();
+    if (!steps[idx]) { overlay.style.display='none'; localStorage.setItem('hl_walk_v1','1'); return; }
     overlay.style.display='block';
+    const step = steps[idx];
     const target = document.querySelector(step.sel);
-    if (!target) { tip.textContent = step.text; return; }
+    overlay.onclick = ()=> { overlay.style.display='none'; localStorage.setItem('hl_walk_v1','1'); }; // tap to close
+    if (!target) return;
     target.scrollIntoView({ behavior:'smooth', block:'center' });
     setTimeout(()=> {
-      const r = target.getBoundingClientRect();
-      const pad = 12;
-      highlight.style.width = (r.width + pad*2) + 'px';
-      highlight.style.height = (r.height + pad*2) + 'px';
-      highlight.style.left = (window.scrollX + r.left - pad) + 'px';
-      highlight.style.top  = (window.scrollY + r.top - pad) + 'px';
+      const rect = target.getBoundingClientRect();
+      const hl = document.getElementById('walkHighlight');
+      hl.style.width = (rect.width + 16) + 'px';
+      hl.style.height = (rect.height + 16) + 'px';
+      hl.style.left = (window.scrollX + rect.left - 8) + 'px';
+      hl.style.top  = (window.scrollY + rect.top - 8) + 'px';
+      const tip = document.getElementById('walkTooltip');
       tip.textContent = step.text;
-      // next/prev controls handled inline for simplicity
-      // show next step on overlay click
-      overlay.onclick = ()=> startWalk(i+1);
+      tip.style.top = (window.scrollY + rect.bottom + 12) + 'px';
     }, 380);
   }
+  function createWalkElements(){
+    if (document.getElementById('walkOverlay')) return document.getElementById('walkOverlay');
+    const overlay = document.createElement('div'); overlay.id='walkOverlay'; overlay.className='walk-overlay';
+    const highlight = document.createElement('div'); highlight.id='walkHighlight'; highlight.className='walk-highlight';
+    const tip = document.createElement('div'); tip.id='walkTooltip'; tip.className='walk-tooltip'; tip.style.display='block';
+    overlay.appendChild(highlight); overlay.appendChild(tip); document.body.appendChild(overlay);
+    return overlay;
+  }
 
-  // bindings
+  // --- Event wiring
   window.addEventListener('load', ()=>{
     try {
       document.getElementById('newBtn').addEventListener('click', newPrompt);
       document.getElementById('copyBtn').addEventListener('click', copyPrompt);
       document.getElementById('shareBtn').addEventListener('click', sharePrompt);
       document.getElementById('favBtn').addEventListener('click', addFavorite);
-      document.getElementById('openFavBtn').addEventListener('click', openFavModal);
-      document.getElementById('closeFav').addEventListener('click', closeFavModal);
-      document.getElementById('favBackdrop').addEventListener('click', closeFavModal);
+      document.getElementById('openFavBtn').addEventListener('click', openFav);
+      document.getElementById('closeFav').addEventListener('click', closeFav);
+      document.getElementById('favBackdrop').addEventListener('click', closeFav);
       document.getElementById('startBreath').addEventListener('click', startBreathing);
       document.getElementById('category').addEventListener('change', newPrompt);
       document.querySelectorAll('input[name="mode"]').forEach(r=> r.addEventListener('change', newPrompt));
-
-      loadLibrary();
-      if (!localStorage.getItem('hl_walk_v1')) setTimeout(()=> startWalk(0), 600);
-    } catch (e) {
-      console.error('init error', e);
-    }
+      tryLoadExternal();
+      setTimeout(()=> startWalk(0), 700);
+    } catch (e) { console.error('init error', e); }
   });
 
-  // expose some helpers for debugging
-  window.healingLens = { newPrompt, loadLibrary, addFavorite, openFavModal, startBreathing };
+  // Expose for debug
+  window.healingLens = { newPrompt, tryLoadExternal, startBreathing, openFav };
+
   </script>
 </body>
 </html>
