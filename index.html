@@ -15,15 +15,16 @@
       background:linear-gradient(135deg,var(--bg1),var(--bg2)); color:var(--text);
       padding:20px; display:flex; flex-direction:column; align-items:center; text-align:center;
     }
-    h1{ font-family:'Poppins',sans-serif; font-size:1.9rem; margin:6px 0 2px; }
+    h1{ font-family:'Poppins',sans-serif; font-size:1.8rem; margin:8px 0 2px; }
     h2{ font-style:italic; color:var(--muted); margin:0 0 12px; }
-    .controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:10px 0; align-items:center;}
+    .controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:12px 0; align-items:center;}
     .prompt-box{ background:var(--card); border-radius:12px; padding:18px; width:100%; max-width:760px; box-shadow:0 10px 26px rgba(0,0,0,0.06); text-align:left; white-space:pre-wrap; margin-bottom:12px;}
-    .prompt{ font-size:1.18rem; line-height:1.6; margin:0; }
+    .prompt{ font-size:1.15rem; line-height:1.6; margin:0; }
     button{ background:var(--accent); border:none; padding:10px 14px; border-radius:10px; cursor:pointer; font-family:'Poppins',sans-serif; }
     button.secondary{ background:transparent; border:1px solid rgba(0,0,0,0.06); }
+    select{ padding:8px 12px; border-radius:8px; }
     .breathe-circle{ width:120px; height:120px; border-radius:50%; background:var(--accent); margin:18px auto; display:none; opacity:0; box-shadow:0 12px 30px rgba(0,0,0,0.06); transform-origin:center; }
-    @keyframes breathe-css{ 0%{transform:scale(1);}50%{transform:scale(1.6);}100%{transform:scale(1);} }
+    @keyframes breathe-css{ 0%{transform:scale(1);background:var(--accent);}50%{transform:scale(1.6);background:var(--accent2);}100%{transform:scale(1);background:var(--accent);} }
     .breathe-css{ animation:breathe-css 6000ms ease-in-out 4 forwards; opacity:1 !important; }
     .fav-panel{ width:100%; max-width:760px; margin-top:12px; text-align:left; display:none; }
     .fav-card{ background:var(--card); padding:12px; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,0.06); }
@@ -54,11 +55,11 @@
     <button id="newBtn">🌸 New</button>
     <button id="copyBtn" class="secondary">📋 Copy</button>
     <button id="shareBtn">📤 Share</button>
-    <!-- SINGLE main Favorites button -->
+    <!-- Single Favorites button -->
     <button id="favToggleBtn" class="secondary">📚 Favorites</button>
   </div>
 
-  <!-- collapsible favorites panel (single place to Save + manage) -->
+  <!-- Collapsible favorites panel; panel includes Save current -->
   <div class="fav-panel" id="favPanel" aria-hidden="true">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <div style="display:flex;gap:8px;align-items:center;">
@@ -85,7 +86,7 @@
 
 <script>
 /* ---------- Library loader (prompts.json if present) ---------- */
-/* Fallback minimal library used only if prompts.json fails to load */
+/* Minimal fallback used only if prompts.json fails to load */
 const FALLBACK = {
   prompts: {
     mindfulness:[ "Pause. Place one hand on your chest. Feel one full breath enter and leave.", "Notice one sound around you that feels calming. Stay with it for one minute.", "Close your eyes and imagine your favorite place in nature for 30 seconds." ],
@@ -104,12 +105,12 @@ const FALLBACK = {
 let prompts = {}, affirmations = {};
 let favorites = JSON.parse(localStorage.getItem('favorites')||'[]');
 const lastByCat = {};
-let breathAnim = null, breathTimeout = null, toastTimer=null;
+let waAnim=null, fallbackTimeout=null, toastTimer=null;
 
-// Helper toast
+// toast helper
 function showToast(msg, ms=1400){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(()=> t.style.display='none', ms); }
 
-// Load prompts.json (if present) - relative path so it works on gh-pages subpath
+// load prompts.json (relative path so GH Pages subpath works)
 async function loadLibrary(){
   try{
     const res = await fetch('./prompts.json', { cache: 'no-store' });
@@ -123,7 +124,7 @@ async function loadLibrary(){
         return;
       }
     }
-  }catch(e){ console.warn('Could not load prompts.json', e); }
+  } catch(e){ console.warn('Could not load prompts.json', e); }
   // fallback
   prompts = FALLBACK.prompts;
   affirmations = FALLBACK.affirmations;
@@ -131,7 +132,7 @@ async function loadLibrary(){
   newPrompt();
 }
 
-// Prompt display
+// prompt UI
 function setPromptText(text){ document.getElementById('prompt').innerText = text; }
 function newPrompt(){
   const cat = (document.getElementById('category')||{}).value || 'mindfulness';
@@ -144,11 +145,11 @@ function newPrompt(){
   setPromptText(text);
 }
 
-// Copy & Share
+// copy & share
 async function copyPrompt(){ try{ await navigator.clipboard.writeText(document.getElementById('prompt').innerText); showToast('Copied'); } catch { showToast('Copy failed'); } }
-async function sharePrompt(){ const text=document.getElementById('prompt').innerText.trim(); if(!text) return showToast('Nothing to share'); if(navigator.share){ try{ await navigator.share({title:'HealingLensStudio Calm', text}); showToast('Shared'); return; } catch{} } try{ await navigator.clipboard.writeText(text); showToast('Copied (no share)'); }catch{ showToast('Could not share'); } }
+async function sharePrompt(){ const text = document.getElementById('prompt').innerText.trim(); if(!text) return showToast('Nothing to share'); if(navigator.share){ try{ await navigator.share({ title:'HealingLensStudio Calm', text }); showToast('Shared'); return; } catch{} } try{ await navigator.clipboard.writeText(text); showToast('Copied (no share)'); } catch { showToast('Could not share'); } }
 
-// FAVORITES: single top button toggles panel; panel contains Save current + list + actions
+// FAVORITES: single top button toggles panel. Panel contains Save current + list + actions
 function toggleFavPanel(){
   const p = document.getElementById('favPanel');
   if(!p) return;
@@ -173,7 +174,6 @@ function renderFavorites(){
       </div>
     </div>
   `).join('');
-  // wire handlers
   el.querySelectorAll('[data-use]').forEach(b=> b.addEventListener('click', ()=>{ const i=+b.dataset.use; setPromptText(favorites[i]); showToast('Loaded'); }));
   el.querySelectorAll('[data-remove]').forEach(b=> b.addEventListener('click', ()=>{ const i=+b.dataset.remove; favorites.splice(i,1); localStorage.setItem('favorites', JSON.stringify(favorites)); renderFavorites(); showToast('Removed'); }));
 }
@@ -184,8 +184,7 @@ function clearAllFavorites(){
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"'`=\/]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#96;','=':'&#61;'}[c])); }
 
-// BREATHING - try WAAPI first, else CSS fallback
-let waAnim=null, fallbackTimeout=null;
+// BREATHING (WAAPI preferred, CSS fallback)
 function startBreathing(){
   const el = document.getElementById('breatheCircle');
   if(!el) return;
@@ -193,7 +192,6 @@ function startBreathing(){
   el.style.display='block'; el.style.opacity='1';
   if(waAnim && waAnim.cancel) try{ waAnim.cancel(); }catch(e){}
   if(fallbackTimeout) { clearTimeout(fallbackTimeout); fallbackTimeout=null; }
-  // WAAPI
   if(el.animate){
     try{
       waAnim = el.animate([
@@ -204,7 +202,7 @@ function startBreathing(){
       showToast('🫁 Follow the circle to breathe');
       waAnim.onfinish = ()=>{ setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=> el.style.display='none',180); showToast('Breathing complete'); }, 60); waAnim=null; };
       return;
-    }catch(e){ console.warn('WAAPI failed, fallback', e); }
+    }catch(e){ console.warn('WAAPI animate failed, fallback', e); }
   }
   // CSS fallback
   el.classList.remove('breathe-css'); void el.offsetWidth; el.classList.add('breathe-css'); showToast('🫁 Follow the circle to breathe');
@@ -213,13 +211,13 @@ function startBreathing(){
 function stopBreathing(){
   const el = document.getElementById('breatheCircle');
   if(!el) return;
-  if(waAnim && waAnim.cancel) try{ waAnim.cancel(); }catch(e){ }
+  if(waAnim && waAnim.cancel) try{ waAnim.cancel(); }catch(e){}
   if(fallbackTimeout){ clearTimeout(fallbackTimeout); fallbackTimeout=null; }
   el.classList.remove('breathe-css'); el.style.opacity='0'; setTimeout(()=> el.style.display='none',160);
   showToast('Stopped');
 }
 
-// Wiring events
+// wiring
 window.addEventListener('load', ()=>{
   document.getElementById('newBtn').addEventListener('click', newPrompt);
   document.getElementById('copyBtn').addEventListener('click', copyPrompt);
@@ -235,7 +233,7 @@ window.addEventListener('load', ()=>{
   loadLibrary();
 });
 
-// Expose small API for console
+// expose small API for console
 window.healingLens = { newPrompt, startBreathing, stopBreathing, saveCurrentToFavorites, toggleFavPanel };
 
 </script>
